@@ -42,11 +42,13 @@ ABlasterCharacter::ABlasterCharacter():
 	Combat->SetIsReplicated(true);
 
 	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();
+	CharacterMovementComponent->SetCrouchedHalfHeight(60.f);
+	CharacterMovementComponent->MaxWalkSpeedCrouched = 450.f;
 	CharacterMovementComponent->bOrientRotationToMovement = true;
 	CharacterMovementComponent->NavAgentProps.bCanCrouch = true;
 	CharacterMovementComponent->GravityScale = 1.7f;
 	CharacterMovementComponent->JumpZVelocity = 850.f;
-	CharacterMovementComponent->RotationRate = FRotator(0.f, 0.f, 850.f);
+	CharacterMovementComponent->RotationRate = FRotator(0.f, 850.f, 0.f);
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);

@@ -26,7 +26,7 @@ public:
 	/**
 	 * Socket for weapon to attach to
 	 */
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere)
 	FString RightHandSocketName;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);

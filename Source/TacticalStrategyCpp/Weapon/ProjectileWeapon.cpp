@@ -11,6 +11,7 @@ AProjectileWeapon::AProjectileWeapon():
 	MuzzleFlashSocketName("MuzzleFlash")
 {
 	PrimaryActorTick.bCanEverTick = true;
+
 }
 
 void AProjectileWeapon::BeginPlay()

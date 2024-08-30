@@ -21,7 +21,10 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannels(ECR_Ignore);
 	CollisionBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	CollisionBox->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
 
+	CollisionBox->SetBoxExtent(FVector(5,2.5f,2.5f), false);
+	
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->InitialSpeed = 15000;
