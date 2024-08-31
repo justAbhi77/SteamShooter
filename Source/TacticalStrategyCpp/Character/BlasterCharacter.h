@@ -119,4 +119,6 @@ public:
 	 * Fire Montage Aim Section Names
 	 */
 	FString FireMontage_Aim;
+
+	FVector GetHitTarget() const;
 };

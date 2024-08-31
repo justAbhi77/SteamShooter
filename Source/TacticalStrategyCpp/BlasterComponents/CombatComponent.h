@@ -80,6 +80,8 @@ private:
 
 	// Hud and Crosshairs
 	float CrosshairVelocityFactor, CrosshairInAirFactor;
+
+	FVector HitTarget;
 	
 public:
 	
