@@ -18,7 +18,8 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			if(UWorld* World = GetWorld())
 			{
 				bUseSeamlessTravel = true;
-				World->ServerTravel(FString("/Game/Maps/MainGame?listen"));
+				MainGameMapPath = FString::Printf(TEXT("%s?listen"), *MainGameMapPath);
+				World->ServerTravel(FString(MainGameMapPath));
 			}
 		}
 		
