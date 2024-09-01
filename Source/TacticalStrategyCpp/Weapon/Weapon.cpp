@@ -11,6 +11,10 @@
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 
 AWeapon::AWeapon():
+	bIsAutomatic(true),
+	FireDelay(0.15f),
+	ZoomedFov(30.f),
+	ZoomedInterpSpeed(20.f),
 	WeaponState(EWeaponState::EWS_Initial),
 	LeftHandSocketName("LeftHandSocket"),
 	AmmoEjectFlashSocketName("AmmoEject")
@@ -138,7 +142,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 		{
 			const FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(GetWeaponMesh());
 			// from muzzle flash socket(gun) to world hit location (blocking mesh) 
-			const FVector ToTarget = HitTarget - SocketTransform.GetLocation();		
+			// const FVector ToTarget = HitTarget - SocketTransform.GetLocation();		
 			
 			if(UWorld* World = GetWorld())
 			{

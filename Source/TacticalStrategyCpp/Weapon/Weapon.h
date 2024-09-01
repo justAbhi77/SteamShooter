@@ -43,7 +43,19 @@ public:
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairsTop;
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	UTexture2D* CrosshairsBottom;
+	UTexture2D* CrosshairsBottom;	
+
+	/**
+	 * Is this weapon automatic
+	 */
+	UPROPERTY(EditAnywhere, Category = Combat)
+	bool bIsAutomatic;
+	
+	/**
+	 * Automatic weapon delay
+	 */
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay;
 
 protected:
 	virtual void BeginPlay() override;
@@ -56,7 +68,19 @@ protected:
 	void OnSphereEndOverlap( UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex);
+		int32 OtherBodyIndex);	
+
+	/**
+	 * Field of view when zooming with this weapon
+	 */
+	UPROPERTY(EditAnywhere)
+	float ZoomedFov;
+	
+	/**
+	 * Delta(RoC) for Field of view when zooming with this weapon
+	 */
+	UPROPERTY(EditAnywhere)
+	float ZoomedInterpSpeed;
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properies")
@@ -95,5 +119,9 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
 	FTransform GetWeaponSocketLeftHand() const;
+
+	FORCEINLINE float GetZoomedFov() const { return ZoomedFov; }
+	
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomedInterpSpeed; }
 	
 };

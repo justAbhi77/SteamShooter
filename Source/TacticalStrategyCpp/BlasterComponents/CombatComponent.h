@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "TacticalStrategyCpp/Hud/BlasterHud.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 9999.f
@@ -41,6 +42,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon() const;
+	void Fire();
 
 	void FireButtonPressed(bool bPressed);
 
@@ -50,7 +52,7 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Fire(const FVector_NetQuantize& TraceHitTarget);
 
-	void TraceUnderCrosshairs(FHitResult& TraceHitResult) const;
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHudCrosshairs(float DeltaTime);
 
@@ -78,10 +80,49 @@ private:
 
 	bool bFireButtonPressed;
 
-	// Hud and Crosshairs
-	float CrosshairVelocityFactor, CrosshairInAirFactor;
+	/**
+	 * Base spread(Spray pattern range for weapons) for crosshairs
+	 */
+	UPROPERTY(EditAnywhere)
+	float CrosshairBaseLineSpread;
+
+	// Hud and Crosshairs	
+	float CrosshairVelocityFactor, CrosshairInAirFactor, CrosshairAimFactor, CrosshairShootingFactor;
 
 	FVector HitTarget;
+
+	/**
+	 * Default FOV for Character
+	 */
+	float DefaultFov;
+
+	/**
+	 * Field of view when zooming with a weapon
+	 */
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomedFov;
+
+	/**
+	 * Delta(RoC) for Field of view when zooming the weapon
+	 */
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomInterpSpeed;
+
+	float CurrentFov;
+
+	void InterFov(const float DeltaTime);
+	
+	FHUDPackage HUDPackage;
+
+	/**
+	 * Automatic Fire
+	 */
+	FTimerHandle FireTimer;
+
+	bool bCanFire; // To stop spamming button while timer is running
+	
+	void StartFireTimer();
+	void FireTimerFinished();
 	
 public:
 	

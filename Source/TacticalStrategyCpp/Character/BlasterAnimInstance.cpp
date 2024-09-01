@@ -46,10 +46,12 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 
 	TurningInPlace = BlasterCharacter->GetTurningInPlace();
 
-	FRotator BaseAimRotation = BlasterCharacter->GetBaseAimRotation();
-	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity());
-	
-	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, BaseAimRotation);
+	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
+
+	const FRotator BaseAimRotation = BlasterCharacter->GetBaseAimRotation();
+	const FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity());
+
+	const FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, BaseAimRotation);
 
 	DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaSeconds, 6.f);
 	YawOffset = DeltaRotation.Yaw;
@@ -84,10 +86,13 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 		if(BlasterCharacter->IsLocallyControlled())
 		{
 			bIsLocallyControlled = true;
-			const FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(WeaponGrabbingBoneName, RTS_World);
+			const FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
+				WeaponGrabbingBoneName, RTS_World);
 			const FVector RightHandWorldLocation = RightHandTransform.GetLocation();
-			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(RightHandWorldLocation, RightHandWorldLocation +
-				(RightHandWorldLocation - BlasterCharacter->GetHitTarget()));
+
+			const FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandWorldLocation,
+				RightHandWorldLocation + (RightHandWorldLocation - BlasterCharacter->GetHitTarget()));
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaSeconds, 30.f);
 			
 		// const FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("MuzzleFlash"), RTS_World);		
 		// const FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetUnitAxis(EAxis::X));

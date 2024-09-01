@@ -12,6 +12,9 @@ AProjectileWeapon::AProjectileWeapon():
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Projectile Weapon default zoom values
+	ZoomedFov = 45.f;
+	ZoomedInterpSpeed = 25.f;
 }
 
 void AProjectileWeapon::BeginPlay()

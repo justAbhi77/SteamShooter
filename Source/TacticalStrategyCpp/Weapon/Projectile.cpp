@@ -6,7 +6,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
-
+#include "TacticalStrategyCpp/Character/BlasterCharacter.h"
+#include "TacticalStrategyCpp/TacticalStrategyCpp.h"
 
 AProjectile::AProjectile()
 {
@@ -16,12 +17,13 @@ AProjectile::AProjectile()
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	SetRootComponent(CollisionBox);
 
-	CollisionBox->SetCollisionObjectType(ECC_WorldDynamic);
-	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	CollisionBox->SetCollisionResponseToChannels(ECR_Ignore);
 	CollisionBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
+	CollisionBox->SetCollisionObjectType(ECC_WorldDynamic);
+	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	CollisionBox->SetBoxExtent(FVector(5,2.5f,2.5f), false);
 	
@@ -38,6 +40,8 @@ void AProjectile::BeginPlay()
 	if(HasAuthority())
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
+		FTimerHandle DestroyAfter;
+		GetWorldTimerManager().SetTimer(DestroyAfter, this, &AProjectile::DestroyAfterTime, 10.f);
 	}
 	
 	if(Tracer)
@@ -49,6 +53,16 @@ void AProjectile::BeginPlay()
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
+{
+	if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
+	{
+		BlasterCharacter->MulticastHit();
+	}
+	
+	Destroy();
+}
+
+void AProjectile::DestroyAfterTime()
 {
 	Destroy();
 }
