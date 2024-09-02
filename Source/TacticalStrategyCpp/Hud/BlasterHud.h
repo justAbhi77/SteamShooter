@@ -34,7 +34,18 @@ class TACTICALSTRATEGYCPP_API ABlasterHud : public AHUD
 	GENERATED_BODY()
 
 public:
-	virtual void DrawHUD() override;
+	virtual void DrawHUD() override;	
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	TSubclassOf<class UUserWidget> CharacterOverlayClass;
+
+	UPROPERTY()
+	class UCharacterOverlay* CharacterOverlay;
+
+protected:
+	virtual void BeginPlay() override;
+
+	void AddCharacterOverlay();
 
 private:
 	FHUDPackage HudPackage;

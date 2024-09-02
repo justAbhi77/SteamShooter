@@ -20,6 +20,8 @@ ABlasterCharacter::ABlasterCharacter():
 	TurningInPlace(ETurningInPlace::ETIP_NotTurning),
 	CameraThreshold(200.f),
 	TurnThreshold(0.5f),
+	MaxHealth(100.f),
+	Health(100.f),
 	WeaponGrabbingHandSocket("hand_r"),
 	FireMontage_Hip("RifleHip"),
 	FireMontage_Aim("RifleAim")
@@ -100,6 +102,8 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
+
+	DOREPLIFETIME(ABlasterCharacter, Health);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -133,6 +137,10 @@ void ABlasterCharacter::PlayHitReactMontage() const
 		const FName SectionName = FName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+
+void ABlasterCharacter::OnRep_Health()
+{
 }
 
 void ABlasterCharacter::MulticastHit_Implementation()

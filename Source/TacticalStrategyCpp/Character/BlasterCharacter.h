@@ -66,7 +66,10 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	
-	void PlayHitReactMontage() const;
+	void PlayHitReactMontage() const;	
+
+	UFUNCTION()
+	void OnRep_Health();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -124,6 +127,12 @@ private:
 	FRotator ProxyRotation, ProxyRotationLastFrame;
 
 	float ProxyYaw, TimeSinceLastMovementReplication;
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+	float Health;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
