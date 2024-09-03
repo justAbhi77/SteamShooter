@@ -26,9 +26,6 @@ public:
 
 	void PlayFireMontage(const bool bAiming) const;
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
-
 	virtual void OnRep_ReplicatedMovement() override;
 
 protected:
@@ -67,9 +64,17 @@ protected:
 	void FireButtonReleased();
 	
 	void PlayHitReactMontage() const;	
+	
+	void UpdateHudHealth();
 
 	UFUNCTION()
 	void OnRep_Health();
+
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterPlayerController;
+
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)

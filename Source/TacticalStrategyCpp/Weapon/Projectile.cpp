@@ -9,7 +9,8 @@
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 #include "TacticalStrategyCpp/TacticalStrategyCpp.h"
 
-AProjectile::AProjectile()
+AProjectile::AProjectile():
+	Damage(10.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
@@ -53,12 +54,7 @@ void AProjectile::BeginPlay()
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
-{
-	if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
-	{
-		BlasterCharacter->MulticastHit();
-	}
-	
+{	
 	Destroy();
 }
 

@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 #include "TacticalStrategyCpp/TacticalStrategyCpp.h"
 #include "TacticalStrategyCpp/BlasterComponents/CombatComponent.h"
+#include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/Weapon/Weapon.h"
 
 ABlasterCharacter::ABlasterCharacter():
@@ -75,7 +76,13 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	UpdateHudHealth();
+
+	if(HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+	}
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -139,13 +146,27 @@ void ABlasterCharacter::PlayHitReactMontage() const
 	}
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::UpdateHudHealth()
 {
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHudHealth(Health, MaxHealth);
+	}
 }
 
-void ABlasterCharacter::MulticastHit_Implementation()
+void ABlasterCharacter::OnRep_Health()
 {
+	UpdateHudHealth();
 	PlayHitReactMontage();
+}
+
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	OnRep_Health();
 }
 
 void ABlasterCharacter::MoveForward(const float Value)
