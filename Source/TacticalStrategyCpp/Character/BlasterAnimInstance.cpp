@@ -48,6 +48,8 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 
 	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 
+	bElimmed = BlasterCharacter->IsElimmed();
+
 	const FRotator BaseAimRotation = BlasterCharacter->GetBaseAimRotation();
 	const FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity());
 

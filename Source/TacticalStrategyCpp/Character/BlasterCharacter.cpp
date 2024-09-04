@@ -24,6 +24,7 @@ ABlasterCharacter::ABlasterCharacter():
 	TurnThreshold(0.5f),
 	MaxHealth(100.f),
 	Health(100.f),
+	bElimmed(false),
 	WeaponGrabbingHandSocket("hand_r"),
 	FireMontage_Hip("RifleHip"),
 	FireMontage_Aim("RifleAim")
@@ -74,9 +75,10 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0;
 }
 
-void ABlasterCharacter::Elim()
+void ABlasterCharacter::Elim_Implementation()
 {
-	
+	bElimmed = true;
+	PlayElimMontage();
 }
 
 void ABlasterCharacter::BeginPlay()
@@ -138,6 +140,14 @@ void ABlasterCharacter::PlayFireMontage(const bool bAiming) const
 		const FName SectionName = bAiming ? FName(FireMontage_Aim) : FName(FireMontage_Hip);
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+
+void ABlasterCharacter::PlayElimMontage() const
+{
+	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); AnimInstance && ElimMontage)
+	{
+		AnimInstance->Montage_Play(ElimMontage);
+	}	
 }
 
 void ABlasterCharacter::PlayHitReactMontage() const
