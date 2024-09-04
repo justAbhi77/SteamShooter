@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 #include "TacticalStrategyCpp/TacticalStrategyCpp.h"
 #include "TacticalStrategyCpp/BlasterComponents/CombatComponent.h"
+#include "TacticalStrategyCpp/GameMode/BlasterGameMode.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/Weapon/Weapon.h"
 
@@ -71,6 +72,11 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 	SimProxiesTurn();
 	TimeSinceLastMovementReplication = 0;
+}
+
+void ABlasterCharacter::Elim()
+{
+	
 }
 
 void ABlasterCharacter::BeginPlay()
@@ -167,6 +173,14 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 {
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	OnRep_Health();
+	if(Health == 0.f)
+		if(ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+		{
+			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :
+				BlasterPlayerController;
+			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatorController);
+			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
+		}
 }
 
 void ABlasterCharacter::MoveForward(const float Value)
