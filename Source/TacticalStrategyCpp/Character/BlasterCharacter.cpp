@@ -30,6 +30,9 @@ ABlasterCharacter::ABlasterCharacter():
 	FireMontage_Aim("RifleAim")
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
+	// Always spawn even if players are at player spawn (number os player spawns < players in game)
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
@@ -75,7 +78,13 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0;
 }
 
-void ABlasterCharacter::Elim_Implementation()
+void ABlasterCharacter::Elim()
+{
+	Multicast_Elim();
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
+}
+
+void ABlasterCharacter::Multicast_Elim_Implementation()
 {
 	bElimmed = true;
 	PlayElimMontage();
@@ -478,6 +487,14 @@ void ABlasterCharacter::HideCameraOnCharacterClose() const
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}		
 	}
+}
+
+void ABlasterCharacter::ElimTimerFinished()
+{
+	if(ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+	{
+		BlasterGameMode->RequestRespawn(this, Controller);
+	}	
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)

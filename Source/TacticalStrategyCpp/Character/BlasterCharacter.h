@@ -30,8 +30,10 @@ public:
 
 	virtual void OnRep_ReplicatedMovement() override;
 
-	UFUNCTION(NetMulticast, Reliable)
 	void Elim();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Elim();
 
 protected:
 	virtual void BeginPlay() override;
@@ -148,6 +150,16 @@ private:
 	float Health;
 
 	bool bElimmed;
+
+	FTimerHandle ElimTimer;
+
+	/**
+	 * Delay so spawn player after death
+	 */
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay; // EditDefault makes it so that the value is only editable on the default character
+	
+	void ElimTimerFinished();
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
