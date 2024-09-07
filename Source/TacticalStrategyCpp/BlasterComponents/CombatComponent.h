@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "TacticalStrategyCpp/Hud/BlasterHud.h"
+#include "TacticalStrategyCpp/Weapon/WeaponTypes.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 9999.f
@@ -123,6 +124,19 @@ private:
 	
 	void StartFireTimer();
 	void FireTimerFinished();
+
+	bool CanFire() const;
+
+	/*
+	 * Carried Ammo for current Weapon
+	 */
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
 	
 public:
 	

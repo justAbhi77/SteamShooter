@@ -9,6 +9,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
+#include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 
 AWeapon::AWeapon():
 	bIsAutomatic(true),
@@ -17,7 +18,9 @@ AWeapon::AWeapon():
 	ZoomedInterpSpeed(20.f),
 	WeaponState(EWeaponState::EWS_Initial),
 	LeftHandSocketName("LeftHandSocket"),
-	AmmoEjectFlashSocketName("AmmoEject")
+	AmmoEjectFlashSocketName("AmmoEject"),
+	Ammo(30),
+	MagCapacity(30)
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
@@ -39,13 +42,42 @@ AWeapon::AWeapon():
 	PickupWidget->SetupAttachment(RootComponent);
 }
 
+void AWeapon::SetHudAmmo()
+{
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
+		BlasterOwnerCharacter;
+	if(BlasterOwnerCharacter)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr
+				? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+		if(BlasterOwnerController)
+		{
+			BlasterOwnerController->SetHudWeaponAmmo(Ammo);
+		}
+	}	
+}
+
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	if(Owner == nullptr)
+	{
+		BlasterOwnerCharacter = nullptr;
+		BlasterOwnerController = nullptr;
+	}
+	else
+	{
+		SetHudAmmo();		
+	}
+}
+
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
 	if(HasAuthority())
 	{
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		AreaSphere->SetCollisionResponseToChannel (ECC_Pawn, ECR_Overlap);
 
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
@@ -75,6 +107,17 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}	
 }
 
+void AWeapon::OnRep_Ammo()
+{
+	SetHudAmmo();
+}
+
+void AWeapon::SpendRound()
+{
+	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
+	OnRep_Ammo();
+}
+
 void AWeapon::OnRep_WeaponState() const
 {
 	switch(WeaponState)
@@ -83,9 +126,22 @@ void AWeapon::OnRep_WeaponState() const
 		break;
 	case EWeaponState::EWS_Equipped:
 		ShowPickupWidget(false);
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if(HasAuthority())
+		{
+			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);		
 		break;
 	case EWeaponState::EWS_Dropped:
+		if(HasAuthority())
+		{
+			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		}
+		WeaponMesh->SetSimulatePhysics(true);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 		break;
 	case EWeaponState::EWS_MAX:
 		break;
@@ -93,11 +149,11 @@ void AWeapon::OnRep_WeaponState() const
 	}
 }
 
-void AWeapon::SetWeaponState(const EWeaponState State)
+void AWeapon::SetWeaponState(const EWeaponState State,const bool bUpdateLocally)
 {
 	WeaponState = State;
 
-	if(HasAuthority())
+	if(HasAuthority() || bUpdateLocally)
 	{
 		OnRep_WeaponState();
 	}
@@ -112,7 +168,12 @@ FTransform AWeapon::GetWeaponSocketLeftHand() const
 	return FTransform();
 }
 
-void AWeapon::Tick(float DeltaTime)
+bool AWeapon::IsEmpty() const
+{
+	return Ammo <= 0;
+}
+
+void AWeapon::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
@@ -128,6 +189,8 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	
+	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::Fire(const FVector& HitTarget)
@@ -151,5 +214,18 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
+	SpendRound();
+}
+
+void AWeapon::Dropped()
+{
+	SetWeaponState(EWeaponState::EWS_Dropped);
+
+	const FDetachmentTransformRules DetachRule(EDetachmentRule::KeepWorld, true);
+	WeaponMesh->DetachFromComponent(DetachRule);
+	SetOwner(nullptr);
+	BlasterOwnerCharacter = nullptr;
+	BlasterOwnerController = nullptr;
+	
 }
 

@@ -20,4 +20,16 @@ public:
 	
 	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* HealthText;
+	
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* ScoreText; // ScoreAmount
+	
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* DefeatText; // DefeatsAmount
+	
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* WeaponAmmoText; // WeaponAmmoAmount
+	
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* CarriedAmmoText; // CarriedAmmoAmount
 };

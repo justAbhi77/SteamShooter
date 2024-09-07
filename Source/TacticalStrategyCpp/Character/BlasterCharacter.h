@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "TacticalStrategyCpp/Enums/TurninginPlace.h"
 #include "TacticalStrategyCpp/Interfaces/InteractWithCrosshairsInterface.h"
@@ -34,6 +35,11 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Elim();
+
+	virtual void Destroyed() override;
+
+	UPROPERTY()
+	class ABlasterPlayerState* BlasterPlayerState;
 
 protected:
 	virtual void BeginPlay() override;
@@ -82,6 +88,9 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+
+	// For values that are not yet valid on begin play
+	void PollInit();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -160,6 +169,61 @@ private:
 	float ElimDelay; // EditDefault makes it so that the value is only editable on the default character
 	
 	void ElimTimerFinished();
+
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeLine; // timeline cpp declaration
+	
+	FOnTimelineFloat DissolveTrack; // Event for timeline update
+
+	/*
+	/**
+	 * Dissolve Timeline curve asset 
+	 */
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve;
+	
+	/**
+	 * Dissolve Timeline curve asset 
+	 */
+	UPROPERTY(EditAnywhere)
+	FString DissolveMaterialParam;
+
+	/**
+	 * Dissolve Timeline update event callback
+	 */
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+
+	void StartDissolve();
+
+	/*
+	/**
+	 * Dynamic instance spawned at runtime
+	 #1#
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
+
+	/**
+	 * Actual material used for elim effect
+	 #1#
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* DissolveMaterialInstance;
+	*/
+
+	/**
+	 * Elim bot to spawn when player eliminated
+	 */
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect;
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComp;
+
+	UPROPERTY(EditAnywhere)
+	USceneComponent* ElimBotSpawnLocation;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ElimBotSound;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -199,4 +263,8 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+	
+	FORCEINLINE float GetHealth() const { return Health; }
+	
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 };

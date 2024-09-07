@@ -29,7 +29,8 @@ UCombatComponent::UCombatComponent():
 	ZoomInterpSpeed(20.f),
 	CurrentFov(0),
 	HUDPackage(),
-	bCanFire(true)
+	bCanFire(true),
+	CarriedAmmo(0)
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
@@ -70,7 +71,14 @@ void UCombatComponent::SetAiming(const bool bIsAiming)
 void UCombatComponent::OnRep_EquippedWeapon() const
 {
 	if(EquippedWeapon && Character)
-	{
+	{		
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped, true);
+
+		USkeletalMeshComponent* SkeletalMeshComponent = Character->GetMesh();
+		if(const USkeletalMeshSocket* HandSocket = SkeletalMeshComponent->GetSocketByName(FName(RightHandSocketName)))
+		{
+			HandSocket->AttachActor(EquippedWeapon, SkeletalMeshComponent);
+		}		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;		
 	}
@@ -78,7 +86,7 @@ void UCombatComponent::OnRep_EquippedWeapon() const
 
 void UCombatComponent::Fire()
 {
-	if(bCanFire)
+	if(CanFire())
 	{
 		Server_Fire(HitTarget);
 
@@ -262,6 +270,16 @@ void UCombatComponent::FireTimerFinished()
 	}
 }
 
+bool UCombatComponent::CanFire() const
+{
+	if(EquippedWeapon == nullptr) return false;
+	return !EquippedWeapon->IsEmpty() || !bCanFire;
+}
+
+void UCombatComponent::OnRep_CarriedAmmo()
+{
+}
+
 void UCombatComponent::Server_Fire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	Multicast_Fire(TraceHitTarget);
@@ -307,24 +325,25 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	
 	DOREPLIFETIME(UCombatComponent, bAiming);
+	
+	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if(Character == nullptr || WeaponToEquip == nullptr) return;
 
-	EquippedWeapon = WeaponToEquip;	
+	if(EquippedWeapon)
+		EquippedWeapon->Dropped();
+
+	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetOwner(Character);
 	
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-
-	USkeletalMeshComponent* SkeletalMeshComponent = Character->GetMesh();
-	if(const USkeletalMeshSocket* HandSocket = SkeletalMeshComponent->GetSocketByName(FName(RightHandSocketName)))
-	{
-		HandSocket->AttachActor(EquippedWeapon, SkeletalMeshComponent);
-	}
-
 	if(Character->HasAuthority())
+	{
 		OnRep_EquippedWeapon();
+		if(EquippedWeapon)
+			EquippedWeapon->OnRep_Owner();
+	}
 }
 

@@ -31,6 +31,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void Fire(const FVector& HitTarget);
+
+	void Dropped();
 	
 	// Textures for Weapon Crosshairs
 
@@ -57,6 +59,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float FireDelay;
 
+	void SetHudAmmo();
+	virtual void OnRep_Owner() override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -81,6 +86,11 @@ protected:
 	 */
 	UPROPERTY(EditAnywhere)
 	float ZoomedInterpSpeed;
+
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properies")
@@ -113,8 +123,20 @@ private:
 	UPROPERTY(EditAnywhere)
 	FString AmmoEjectFlashSocketName;
 
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+	
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+
+	UPROPERTY()
+	class ABlasterCharacter* BlasterOwnerCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterOwnerController;
+
 public:
-	void SetWeaponState(const EWeaponState State);
+	void SetWeaponState(const EWeaponState State, const bool bUpdateLocally = false);
 
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
@@ -123,5 +145,7 @@ public:
 	FORCEINLINE float GetZoomedFov() const { return ZoomedFov; }
 	
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomedInterpSpeed; }
+
+	bool IsEmpty() const;
 	
 };
