@@ -2,47 +2,131 @@
 #include "BlasterPlayerController.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "GameFramework/GameMode.h"
+#include "Net/UnrealNetwork.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
+#include "TacticalStrategyCpp/Hud/Announcement.h"
 #include "TacticalStrategyCpp/Hud/BlasterHud.h"
 #include "TacticalStrategyCpp/Hud/CharacterOverlay.h"
+
+ABlasterPlayerController::ABlasterPlayerController():
+	ClientServerDelta(0),
+	TimeSyncFrequency(5),
+	BlasterHud(nullptr),
+	MatchTime(120),
+	CountDownInt(0),
+	CharacterOverlay(nullptr),
+	bInitializeCharacterOverlay(false),
+	HudHealth(0),
+	HudMaxHealth(0),
+	HudScore(0),
+	HudDefeats(0)
+{
+}
 
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
 	BlasterHud = Cast<ABlasterHud>(GetHUD());
+	if(BlasterHud)
+		BlasterHud->AddAnnouncement();
+}
+
+void ABlasterPlayerController::SetHudTime()
+{
+	const double MiliSecondsLeft = MatchTime - GetServerTime();
+	const uint32 SecondsLeft = FMath::CeilToInt(MiliSecondsLeft);
+
+	if(CountDownInt != SecondsLeft)
+	{
+		SetHudMatchCountDown(MiliSecondsLeft);
+	}
+	CountDownInt = SecondsLeft;
+}
+
+void ABlasterPlayerController::PollInit()
+{
+	if(CharacterOverlay == nullptr)
+	{
+		if(BlasterHud && BlasterHud->CharacterOverlay)
+		{
+			CharacterOverlay = BlasterHud->CharacterOverlay;
+			if(CharacterOverlay)
+			{
+				SetHudHealth(HudHealth, HudMaxHealth);
+				SetHudScore(HudScore);
+				SetHudDefeats(HudDefeats);
+			}
+		}
+	}
+}
+
+void ABlasterPlayerController::OnRep_MatchState()
+{
+	if(MatchState == MatchState::InProgress)
+	{		
+		BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
+		if(BlasterHud == nullptr) return;
+
+		BlasterHud->AddCharacterOverlay();
+		if(BlasterHud->Announcement)
+		{
+			BlasterHud->Announcement->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}		
+}
+
+void ABlasterPlayerController::Server_RequestServerTime_Implementation(float TimeOfClientRequest)
+{
+	const float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
+	Client_ReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
+}
+
+void ABlasterPlayerController::Client_ReportServerTime_Implementation(const float TimeOfClientRequest,
+                                                                      float TimeOfServerReceivedClientRequest)
+{
+	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
+	const float CurrentServerTime = TimeOfServerReceivedClientRequest + (0.5f * RoundTripTime);
+
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
 
 void ABlasterPlayerController::SetHudHealth(const float Health, const float MaxHealth)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
 	if(BlasterHud == nullptr) return;
-	
-	// ReSharper disable once CppTooWideScopeInitStatement
-	const UCharacterOverlay* CharacterOverlay = BlasterHud->CharacterOverlay;
-		
+			
 	if(CharacterOverlay && CharacterOverlay->HealthBar && CharacterOverlay->HealthText)
 	{		
 		const float HealthPercent = Health/MaxHealth;
 		CharacterOverlay->HealthBar->SetPercent(HealthPercent);
 		const FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
 		CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
-	}	
+	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HudHealth = Health;
+		HudMaxHealth = MaxHealth;
+	}
 }
 
-void ABlasterPlayerController::SetHudScore(float Score)
+void ABlasterPlayerController::SetHudScore(const float Score)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
 	if(BlasterHud == nullptr) return;
-	
-	// ReSharper disable once CppTooWideScopeInitStatement
-	const UCharacterOverlay* CharacterOverlay = BlasterHud->CharacterOverlay;
 		
 	if(CharacterOverlay && CharacterOverlay->ScoreText)
 	{
 		const FString Text = FString::Printf(TEXT("%d"), FMath::CeilToInt(Score) );
 		CharacterOverlay->ScoreText->SetText(FText::FromString(Text));
-	}	
+	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HudScore = Score;
+	}
 }
 
 void ABlasterPlayerController::SetHudDefeats(int32 Defeats)
@@ -50,23 +134,22 @@ void ABlasterPlayerController::SetHudDefeats(int32 Defeats)
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
 	if(BlasterHud == nullptr) return;
 	
-	// ReSharper disable once CppTooWideScopeInitStatement
-	const UCharacterOverlay* CharacterOverlay = BlasterHud->CharacterOverlay;
-		
 	if(CharacterOverlay && CharacterOverlay->DefeatText)
 	{
 		const FString Text = FString::Printf(TEXT("%d"), Defeats);
 		CharacterOverlay->DefeatText->SetText(FText::FromString(Text));
 	}	
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HudDefeats = Defeats;
+	}
 }
 
 void ABlasterPlayerController::SetHudWeaponAmmo(const int32 Ammo)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
 	if(BlasterHud == nullptr) return;
-	
-	// ReSharper disable once CppTooWideScopeInitStatement
-	const UCharacterOverlay* CharacterOverlay = BlasterHud->CharacterOverlay;
 		
 	if(CharacterOverlay && CharacterOverlay->WeaponAmmoText)
 	{
@@ -78,16 +161,27 @@ void ABlasterPlayerController::SetHudWeaponAmmo(const int32 Ammo)
 void ABlasterPlayerController::SetHudCarriedAmmo(int32 Ammo)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;
-	
-	// ReSharper disable once CppTooWideScopeInitStatement
-	const UCharacterOverlay* CharacterOverlay = BlasterHud->CharacterOverlay;
+	if(BlasterHud == nullptr) return;	
 		
 	if(CharacterOverlay && CharacterOverlay->CarriedAmmoText)
 	{
 		const FString Text = FString::Printf(TEXT("%d"), Ammo);
 		CharacterOverlay->CarriedAmmoText->SetText(FText::FromString(Text));
 	}	
+}
+
+void ABlasterPlayerController::SetHudMatchCountDown(const float CountDownTime)
+{
+	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
+	if(BlasterHud == nullptr) return;
+		
+	if(CharacterOverlay && CharacterOverlay->MatchCountDownText)
+	{
+		const int32 Min = FMath::FloorToInt(CountDownTime / 60);
+		const int32 Seconds = CountDownTime - Min * 60.f;
+		const FString Text = FString::Printf(TEXT("%02d:%02d"), Min, Seconds);
+		CharacterOverlay->MatchCountDownText->SetText(FText::FromString(Text));
+	}
 }
 
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
@@ -98,4 +192,52 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	{
 		SetHudHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 	}
+}
+
+void ABlasterPlayerController::Tick(const float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	SetHudTime();
+
+	PollInit();
+}
+
+float ABlasterPlayerController::GetServerTime()
+{
+	if(HasAuthority()) return GetWorld()->GetTimeSeconds();
+	
+	return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+}
+
+void ABlasterPlayerController::SendReqSyncServerTime()
+{
+	Server_RequestServerTime(GetWorld()->GetTimeSeconds());
+}
+
+void ABlasterPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+
+	if(IsLocalController())
+	{
+		SendReqSyncServerTime();
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &ABlasterPlayerController::SendReqSyncServerTime,
+			TimeSyncFrequency, true);
+	}
+}
+
+void ABlasterPlayerController::OnMatchStateSet(const FName State)
+{
+	MatchState = State;
+	if(HasAuthority())
+		OnRep_MatchState();
+}
+
+void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterPlayerController, MatchState);
 }

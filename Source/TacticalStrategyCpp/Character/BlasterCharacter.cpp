@@ -181,6 +181,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABlasterCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABlasterCharacter::ReloadButtonPressed);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABlasterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABlasterCharacter::MoveRight);
@@ -216,6 +217,27 @@ void ABlasterCharacter::PlayFireMontage(const bool bAiming) const
 		const FName SectionName = bAiming ? FName(FireMontage_Aim) : FName(FireMontage_Hip);
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+			case EWeaponType::EWT_AssaultRifle:
+				SectionName = FName("Rifle");
+				break;
+			case EWeaponType::EWT_MAX:
+				break;
+			default: ;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}	
 }
 
 void ABlasterCharacter::PlayElimMontage() const
@@ -347,6 +369,13 @@ void ABlasterCharacter::CrouchButtonReleased()
 	{
 		UnCrouch();
 	}
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void ABlasterCharacter::ReloadButtonPressed()
+{
+	if(Combat)
+		Combat->Reload();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
@@ -633,6 +662,13 @@ FVector ABlasterCharacter::GetHitTarget() const
 	if(Combat == nullptr) return FVector();
 
 	return Combat->HitTarget;
+}
+
+ECombatState ABlasterCharacter::GetCombatState() const
+{
+	if(Combat == nullptr) return ECombatState::ECS_Max;
+
+	return Combat->CombatState;
 }
 
 void ABlasterCharacter::Tick(const float DeltaTime)

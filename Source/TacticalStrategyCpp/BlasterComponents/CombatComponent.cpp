@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 #include "TacticalStrategyCpp/Hud/BlasterHud.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
@@ -30,7 +31,9 @@ UCombatComponent::UCombatComponent():
 	CurrentFov(0),
 	HUDPackage(),
 	bCanFire(true),
-	CarriedAmmo(0)
+	CarriedAmmo(0),
+	StartingArCarriedAmmo(30),
+	CombatState(ECombatState::ECS_Unoccupied)
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
@@ -51,8 +54,9 @@ void UCombatComponent::BeginPlay()
 			DefaultFov = CameraComponent->FieldOfView;
 			CurrentFov = DefaultFov;
 		}
+		if(Character->HasAuthority())
+			InitializeCarriedAmmo();
 	}
-
 }
 
 void UCombatComponent::SetAiming(const bool bIsAiming)
@@ -68,19 +72,33 @@ void UCombatComponent::SetAiming(const bool bIsAiming)
 	}
 }
 
-void UCombatComponent::OnRep_EquippedWeapon() const
+void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if(EquippedWeapon && Character)
-	{		
+	{
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped, true);
 
 		USkeletalMeshComponent* SkeletalMeshComponent = Character->GetMesh();
 		if(const USkeletalMeshSocket* HandSocket = SkeletalMeshComponent->GetSocketByName(FName(RightHandSocketName)))
 		{
 			HandSocket->AttachActor(EquippedWeapon, SkeletalMeshComponent);
-		}		
+		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;		
+		Character->bUseControllerRotationYaw = true;
+
+		if(const EWeaponType Key = EquippedWeapon->GetWeaponType(); CarriedAmmoMap.Contains(Key))
+			CarriedAmmo = CarriedAmmoMap[Key];
+		if(Character->HasAuthority())
+			OnRep_CarriedAmmo();
+		
+		if(EquippedWeapon->IsEmpty())
+		{
+			Reload();
+		}
+
+		if(USoundCue* Sound = EquippedWeapon->EquipSound)
+			UGameplayStatics::PlaySoundAtLocation(this, Sound,
+				Character->GetActorLocation());
 	}
 }
 
@@ -229,6 +247,52 @@ void UCombatComponent::SetHudCrosshairs(const float DeltaTime)
 	}
 }
 
+void UCombatComponent::HandleReload() const
+{
+	Character->PlayReloadMontage();
+}
+
+void UCombatComponent::OnRep_CombatState()
+{
+	switch (CombatState)
+	{
+		case ECombatState::ECS_Unoccupied:
+			if(bFireButtonPressed)
+				Fire();
+			break;
+		case ECombatState::ECS_Reloading:
+			HandleReload();
+			break;
+		case ECombatState::ECS_Max:
+			break;
+		default: ;
+	}
+}
+
+int32 UCombatComponent::AmountToReload()
+{
+	if(EquippedWeapon == nullptr) return 0;
+	
+	const int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
+
+	if(const EWeaponType Key = EquippedWeapon->GetWeaponType();CarriedAmmoMap.Contains(Key))
+	{
+		const int32 AmountCarried = CarriedAmmoMap[Key];
+		const int32 Least = FMath::Min(RoomInMag, AmountCarried);		
+		return FMath::Clamp(RoomInMag, 0, Least);
+	}
+	return 0;
+}
+
+void UCombatComponent::Server_Reload_Implementation()
+{
+	if(Character == nullptr || EquippedWeapon == nullptr || AmountToReload() == 0) return;
+
+	CombatState = ECombatState::ECS_Reloading;
+
+	HandleReload();
+}
+
 void UCombatComponent::InterFov(const float DeltaTime)
 {
 	if(EquippedWeapon == nullptr) return;
@@ -268,16 +332,29 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+	if(EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
 }
 
 bool UCombatComponent::CanFire() const
 {
 	if(EquippedWeapon == nullptr) return false;
-	return !EquippedWeapon->IsEmpty() || !bCanFire;
+	return !EquippedWeapon->IsEmpty() && bCanFire && (CombatState == ECombatState::ECS_Unoccupied);
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
+{	
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) :
+		Controller;
+	if(Controller)
+		Controller->SetHudCarriedAmmo(CarriedAmmo);
+}
+
+void UCombatComponent::InitializeCarriedAmmo()
 {
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingArCarriedAmmo);
 }
 
 void UCombatComponent::Server_Fire_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -289,7 +366,7 @@ void UCombatComponent::Multicast_Fire_Implementation(const FVector_NetQuantize& 
 {
 	if(EquippedWeapon == nullptr) return;
 	
-	if(Character)
+	if(Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
 		EquippedWeapon->Fire(TraceHitTarget);
@@ -327,6 +404,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
+	
+	DOREPLIFETIME(UCombatComponent, CombatState);	
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -345,5 +424,44 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		if(EquippedWeapon)
 			EquippedWeapon->OnRep_Owner();
 	}
+}
+
+void UCombatComponent::Reload()
+{
+	if(CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
+	{
+		Server_Reload();
+	}
+}
+
+void UCombatComponent::UpdateAmmoValues()
+{
+	const int32 ReloadAmount = AmountToReload();
+	if(const EWeaponType Key = EquippedWeapon->GetWeaponType();CarriedAmmoMap.Contains(Key))
+	{
+		CarriedAmmoMap[Key] -= ReloadAmount;
+		CarriedAmmo = CarriedAmmoMap[Key];
+	}
+
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) :
+		             Controller;
+	if(Controller)
+		Controller->SetHudCarriedAmmo(CarriedAmmo);
+	
+	EquippedWeapon->AddAmmo(-ReloadAmount);
+}
+
+void UCombatComponent::FinishReloading()
+{ 
+	if(Character == nullptr) return;
+	
+	if(Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoValues();
+	}
+	
+	if(bFireButtonPressed)
+		Fire();
 }
 

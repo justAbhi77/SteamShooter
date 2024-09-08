@@ -67,8 +67,14 @@ void AWeapon::OnRep_Owner()
 	}
 	else
 	{
-		SetHudAmmo();		
+		SetHudAmmo();
 	}
+}
+
+void AWeapon::AddAmmo(const int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MagCapacity);
+	SetHudAmmo();
 }
 
 void AWeapon::BeginPlay()

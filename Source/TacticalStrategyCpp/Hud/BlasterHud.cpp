@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BlasterHud.h"
-
+#include "Announcement.h"
 #include "CharacterOverlay.h"
 #include "Blueprint/UserWidget.h"
 
@@ -48,11 +48,18 @@ void ABlasterHud::DrawHUD()
 	}
 }
 
+void ABlasterHud::AddAnnouncement()
+{
+	if(APlayerController* OwningPlayerController = GetOwningPlayerController(); OwningPlayerController && AnnouncementClass)
+	{
+		Announcement = CreateWidget<UAnnouncement>(OwningPlayerController, AnnouncementClass);
+		Announcement->AddToViewport();
+	}	
+}
+
 void ABlasterHud::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AddCharacterOverlay();
 }
 
 void ABlasterHud::AddCharacterOverlay()

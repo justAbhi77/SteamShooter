@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WeaponTypes.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
@@ -61,6 +62,11 @@ public:
 
 	void SetHudAmmo();
 	virtual void OnRep_Owner() override;
+
+	void AddAmmo(int32 AmmoToAdd);
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipSound;
 
 protected:
 	virtual void BeginPlay() override;
@@ -135,6 +141,9 @@ private:
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterOwnerController;
 
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
+
 public:
 	void SetWeaponState(const EWeaponState State, const bool bUpdateLocally = false);
 
@@ -147,5 +156,11 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomedInterpSpeed; }
 
 	bool IsEmpty() const;
+
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; } 
 	
 };

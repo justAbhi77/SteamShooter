@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
+#include "TacticalStrategyCpp/Enums/CombatState.h"
 #include "TacticalStrategyCpp/Enums/TurninginPlace.h"
 #include "TacticalStrategyCpp/Interfaces/InteractWithCrosshairsInterface.h"
 #include "BlasterCharacter.generated.h"
@@ -26,6 +27,8 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	void PlayFireMontage(const bool bAiming) const;
+
+	void PlayReloadMontage();
 	
 	void PlayElimMontage() const;
 
@@ -57,6 +60,8 @@ protected:
 	void CrouchButtonPressed();
 
 	void CrouchButtonReleased();
+
+	void ReloadButtonPressed();
 
 	void AimButtonPressed();
 
@@ -108,7 +113,7 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(const AWeapon* LastWeapon) const;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
 
 	UFUNCTION(Server, Reliable)
@@ -127,6 +132,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* FireWeaponMontage;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ReloadMontage;	
 	
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
@@ -267,4 +275,6 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+
+	ECombatState GetCombatState() const;
 };

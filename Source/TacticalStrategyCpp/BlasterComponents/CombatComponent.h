@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "TacticalStrategyCpp/Enums/CombatState.h"
 #include "TacticalStrategyCpp/Hud/BlasterHud.h"
 #include "TacticalStrategyCpp/Weapon/WeaponTypes.h"
 #include "CombatComponent.generated.h"
@@ -33,6 +34,11 @@ public:
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
+	void Reload();
+	
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -42,7 +48,7 @@ protected:
 	void ServerSetAiming(bool bIsAiming);
 
 	UFUNCTION()
-	void OnRep_EquippedWeapon() const;
+	void OnRep_EquippedWeapon();
 	void Fire();
 
 	void FireButtonPressed(bool bPressed);
@@ -56,6 +62,18 @@ protected:
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHudCrosshairs(float DeltaTime);
+
+	UFUNCTION(Server, Reliable)
+	void Server_Reload();
+
+	void HandleReload() const;
+
+	UFUNCTION()
+	void OnRep_CombatState();
+
+	int32 AmountToReload();	
+	
+	void UpdateAmmoValues();
 
 private:
 	UPROPERTY()
@@ -137,7 +155,14 @@ private:
 	void OnRep_CarriedAmmo();
 
 	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingArCarriedAmmo;
 	
+	void InitializeCarriedAmmo();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState;
 public:
 	
 };
