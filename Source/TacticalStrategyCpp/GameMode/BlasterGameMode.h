@@ -23,6 +23,9 @@ public:
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
 	UPROPERTY(EditDefaultsOnly)
+	float MatchTime;
+	
+	UPROPERTY(EditDefaultsOnly)
 	float WarmUpTime;
 
 	float LevelStartingTime;

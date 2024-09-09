@@ -7,6 +7,7 @@
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
 ABlasterGameMode::ABlasterGameMode():
+	MatchTime(120),
 	WarmUpTime(10),
 	LevelStartingTime(0),
 	CountDownTime(0)

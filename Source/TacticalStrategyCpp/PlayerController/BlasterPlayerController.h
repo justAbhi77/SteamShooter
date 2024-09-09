@@ -24,6 +24,8 @@ public:
 
 	void SetHudMatchCountDown(const float CountDownTime);
 
+	void SetHudAnnouncementCountDown(const float CountdownTime);
+
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual void Tick(float DeltaSeconds) override;
@@ -68,13 +70,18 @@ protected:
 	float TimeSyncFrequency;
 
 	void PollInit();
+
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
+
+	UFUNCTION(Client, Reliable)
+	void ClientJoinMidGame(const FName StateOfMatch, const float WarmUp, const float Match, const float StartingTime);
 	
 private:
 	UPROPERTY()
 	class ABlasterHud* BlasterHud;
 
-	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
-	float MatchTime;
+	float MatchTime, WarmUpTime, LevelStartingTime;
 
 	uint32 CountDownInt;
 
