@@ -117,7 +117,9 @@ void ABlasterPlayerController::OnRep_MatchState()
 		{
 			BlasterHud->Announcement->SetVisibility(ESlateVisibility::Collapsed);
 		}
-	}		
+	}
+	else if(MatchState == MatchState::Cooldown)
+		HandleCooldown();
 }
 
 void ABlasterPlayerController::Server_RequestServerTime_Implementation(float TimeOfClientRequest)
@@ -292,6 +294,18 @@ void ABlasterPlayerController::OnMatchStateSet(const FName State)
 	MatchState = State;
 	if(HasAuthority())
 		OnRep_MatchState();
+}
+
+void ABlasterPlayerController::HandleCooldown()
+{
+	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
+	if(BlasterHud == nullptr) return;
+
+	BlasterHud->CharacterOverlay->RemoveFromParent();
+	if(BlasterHud->Announcement)
+	{
+		BlasterHud->Announcement->SetVisibility(ESlateVisibility::Visible);
+	}
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

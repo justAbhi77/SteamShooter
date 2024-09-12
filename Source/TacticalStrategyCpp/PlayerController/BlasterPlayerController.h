@@ -40,6 +40,8 @@ public:
 
 	void OnMatchStateSet(FName State);
 
+	void HandleCooldown();
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:	

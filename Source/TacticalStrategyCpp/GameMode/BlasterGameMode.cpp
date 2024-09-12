@@ -6,9 +6,15 @@
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
+namespace MatchState
+{
+	const FName Cooldown = FName("Cooldown");
+}
+
 ABlasterGameMode::ABlasterGameMode():
 	MatchTime(120),
 	WarmUpTime(10),
+	CooldownTime(10),
 	LevelStartingTime(0),
 	CountDownTime(0)
 {
@@ -24,6 +30,12 @@ void ABlasterGameMode::Tick(const float DeltaSeconds)
 		CountDownTime = WarmUpTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if(CountDownTime <= 0.f)
 			StartMatch();
+	}
+	else if(MatchState == MatchState::InProgress)
+	{
+		 CountDownTime = WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if(CountDownTime <= 0.f)
+			SetMatchState(MatchState::Cooldown);
 	}
 }
 

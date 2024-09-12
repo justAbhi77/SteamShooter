@@ -4,6 +4,11 @@
 #include "GameFramework/GameMode.h"
 #include "BlasterGameMode.generated.h"
 
+namespace MatchState
+{
+	extern TACTICALSTRATEGYCPP_API const FName Cooldown; // match has ended display winner and start new match
+}
+
 /**
  * 
  */
@@ -27,6 +32,9 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly)
 	float WarmUpTime;
+	
+	UPROPERTY(EditDefaultsOnly)
+	float CooldownTime;
 
 	float LevelStartingTime;
 
