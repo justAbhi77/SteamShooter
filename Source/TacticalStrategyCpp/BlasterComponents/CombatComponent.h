@@ -39,6 +39,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
+	void FireButtonPressed(bool bPressed);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -50,8 +52,6 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 	void Fire();
-
-	void FireButtonPressed(bool bPressed);
 
 	UFUNCTION(Server, Reliable)
 	void Server_Fire(const FVector_NetQuantize& TraceHitTarget);
@@ -158,6 +158,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingArCarriedAmmo;
+	
+	UPROPERTY(EditAnywhere)
+	int32 StartingRocketAmmo;
 	
 	void InitializeCarriedAmmo();
 

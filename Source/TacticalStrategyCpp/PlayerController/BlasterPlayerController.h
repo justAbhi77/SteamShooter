@@ -77,13 +77,17 @@ protected:
 	void ServerCheckMatchState();
 
 	UFUNCTION(Client, Reliable)
-	void ClientJoinMidGame(const FName StateOfMatch, const float WarmUp, const float Match, const float StartingTime);
+	void ClientJoinMidGame(const FName StateOfMatch, const float WarmUp, const float Match,
+		const float StartingTime, const float Cooldown);
 	
 private:
 	UPROPERTY()
 	class ABlasterHud* BlasterHud;
 
-	float MatchTime, WarmUpTime, LevelStartingTime;
+	UPROPERTY()
+	class ABlasterGameMode* BlasterGameMode;
+
+	float MatchTime, WarmUpTime, LevelStartingTime, CooldownTime;
 
 	uint32 CountDownInt;
 

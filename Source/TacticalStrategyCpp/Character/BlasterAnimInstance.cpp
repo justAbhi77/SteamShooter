@@ -105,7 +105,9 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 
 	bUseLeftHandIk = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 	
-	bUseRightHandIk = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseRightHandIk = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading &&
+		!BlasterCharacter->GetDisableGameplay();
 
-	bUseAimOffsets = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseAimOffsets = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading &&
+		!BlasterCharacter->GetDisableGameplay();;
 }

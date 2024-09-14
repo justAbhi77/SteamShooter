@@ -40,6 +40,9 @@ void AProjectile::BeginPlay()
 	if(HasAuthority())
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
+		// should ignore the owner or else owner is damaged when firing thanks @dottheeyes (discord)
+		CollisionBox->IgnoreActorWhenMoving(Owner, true);
+		
 		FTimerHandle DestroyAfter;
 		GetWorldTimerManager().SetTimer(DestroyAfter, this, &AProjectile::DestroyAfterTime, 10.f);
 	}

@@ -71,9 +71,11 @@ void ABlasterHud::AddCharacterOverlay()
 	}
 }
 
-void ABlasterHud::DrawCrosshair(UTexture2D* Texture, const FVector2D ViewportCenter, const FVector2D Spread,
-                                FLinearColor CrosshairColor)
+void ABlasterHud::DrawCrosshair(UTexture2D* Texture, const FVector2D& ViewportCenter, const FVector2D& Spread,
+                                const FLinearColor& CrosshairColor)
 {
+	if(!Texture) return;
+	
 	const float TextureWidth = Texture->GetSizeX(), TextureHeight = Texture->GetSizeY();
 
 	const FVector2D TextureDrawPoint(

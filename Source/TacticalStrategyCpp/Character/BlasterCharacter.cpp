@@ -20,6 +20,7 @@
 #include "TacticalStrategyCpp/Weapon/Weapon.h"
 
 ABlasterCharacter::ABlasterCharacter():
+	bDisableGameplay(false),
 	CameraBoom(nullptr),
 	FollowCamera(nullptr),
 	bIsCrouchButtonToggle(true),
@@ -124,11 +125,16 @@ void ABlasterCharacter::Multicast_Elim_Implementation()
 	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();
 	CharacterMovementComponent->DisableMovement();
 	CharacterMovementComponent->StopMovementImmediately();
-	if(BlasterPlayerController)
+	/* Don't want to disable all input just disable certain gameplay elements 
+	 if(BlasterPlayerController)
 	{
 		DisableInput(BlasterPlayerController);		
 	}
-
+	*/
+	bDisableGameplay = true;
+	if(Combat)
+		Combat->FireButtonPressed(false);
+	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -154,7 +160,15 @@ void ABlasterCharacter::Destroyed()
 	if(ElimBotComp)
 	{
 		ElimBotComp->DestroyComponent();
-	}	
+	}
+
+	const ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+
+	// ReSharper disable once CppTooWideScopeInitStatement
+	const bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
+
+	if(bMatchNotInProgress && Combat && Combat->EquippedWeapon)
+		Combat-> EquippedWeapon->Destroy();
 }
 
 void ABlasterCharacter::BeginPlay()
@@ -196,6 +210,8 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 
 	DOREPLIFETIME(ABlasterCharacter, Health);
+
+	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -219,7 +235,7 @@ void ABlasterCharacter::PlayFireMontage(const bool bAiming) const
 	}
 }
 
-void ABlasterCharacter::PlayReloadMontage()
+void ABlasterCharacter::PlayReloadMontage() const
 {
 	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
@@ -306,6 +322,7 @@ void ABlasterCharacter::PollInit()
 
 void ABlasterCharacter::MoveForward(const float Value)
 {
+	if(bDisableGameplay) return;
 	if(Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw ,0.f);
@@ -316,7 +333,8 @@ void ABlasterCharacter::MoveForward(const float Value)
 }
 
 void ABlasterCharacter::MoveRight(const float Value)
-{	
+{
+	if(bDisableGameplay) return;
 	if(Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw ,0.f);
@@ -338,6 +356,7 @@ void ABlasterCharacter::LookUp(const float Value)
 
 void ABlasterCharacter::EquipButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		if(HasAuthority())
@@ -352,7 +371,7 @@ void ABlasterCharacter::EquipButtonPressed()
 }
 
 void ABlasterCharacter::CrouchButtonPressed()
-{	
+{
 	if(bIsCrouchButtonToggle && bIsCrouched)
 	{
 		UnCrouch();
@@ -364,7 +383,7 @@ void ABlasterCharacter::CrouchButtonPressed()
 }
 
 void ABlasterCharacter::CrouchButtonReleased()
-{	
+{
 	if(!bIsCrouchButtonToggle)
 	{
 		UnCrouch();
@@ -374,6 +393,7 @@ void ABlasterCharacter::CrouchButtonReleased()
 // ReSharper disable once CppMemberFunctionMayBeConst
 void ABlasterCharacter::ReloadButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 		Combat->Reload();
 }
@@ -381,6 +401,7 @@ void ABlasterCharacter::ReloadButtonPressed()
 // ReSharper disable once CppMemberFunctionMayBeConst
 void ABlasterCharacter::AimButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->SetAiming(true);
@@ -391,6 +412,7 @@ void ABlasterCharacter::AimButtonPressed()
 // ReSharper disable once CppMemberFunctionMayBeConst
 void ABlasterCharacter::AimButtonReleased()
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->SetAiming(false);
@@ -493,6 +515,8 @@ void ABlasterCharacter::SimProxiesTurn()
 
 void ABlasterCharacter::Jump()
 {
+	// if(bDisableGameplay) return;
+	
 	if(bIsCrouched)
 	{
 		UnCrouch();
@@ -506,6 +530,7 @@ void ABlasterCharacter::Jump()
 // ReSharper disable once CppMemberFunctionMayBeConst
 void ABlasterCharacter::FireButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->FireButtonPressed(true);
@@ -515,6 +540,7 @@ void ABlasterCharacter::FireButtonPressed()
 // ReSharper disable once CppMemberFunctionMayBeConst
 void ABlasterCharacter::FireButtonReleased()
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->FireButtonPressed(false);
@@ -671,10 +697,15 @@ ECombatState ABlasterCharacter::GetCombatState() const
 	return Combat->CombatState;
 }
 
-void ABlasterCharacter::Tick(const float DeltaTime)
+void ABlasterCharacter::RotateInPlace(const float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
+	if(bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	
 	if(GetLocalRole() > ROLE_SimulatedProxy && IsLocallyControlled()) 
 		AimOffset(DeltaTime);
 	else
@@ -685,6 +716,13 @@ void ABlasterCharacter::Tick(const float DeltaTime)
 
 		CalculateAoPitch();
 	}
+}
+
+void ABlasterCharacter::Tick(const float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	RotateInPlace(DeltaTime);	
 	HideCameraOnCharacterClose();
 	PollInit();
 }

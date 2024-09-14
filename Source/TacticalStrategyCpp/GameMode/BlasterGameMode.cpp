@@ -3,6 +3,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
+#include "TacticalStrategyCpp/GameState/BlasterGameState.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
@@ -37,6 +38,12 @@ void ABlasterGameMode::Tick(const float DeltaSeconds)
 		if(CountDownTime <= 0.f)
 			SetMatchState(MatchState::Cooldown);
 	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		CountDownTime = CooldownTime + WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if(CountDownTime <= 0.f)
+			RestartGame();			
+	}
 }
 
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABlasterPlayerController* VictimController,
@@ -48,9 +55,12 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABl
 	ABlasterPlayerState* VictimPlayerState = VictimController
 			? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
 
-	if(AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+	ABlasterGameState* BlasterGameState =  GetGameState<ABlasterGameState>();
+
+	if(AttackerPlayerState && AttackerPlayerState != VictimPlayerState && BlasterGameState)
 	{
 		AttackerPlayerState->AddToScore(1.0);
+		BlasterGameState->UpdateTopScore(AttackerPlayerState);
 	}
 	if(VictimPlayerState)
 		VictimPlayerState->AddToDefeats(1);

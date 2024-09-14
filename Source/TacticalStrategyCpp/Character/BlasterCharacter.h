@@ -28,7 +28,7 @@ public:
 
 	void PlayFireMontage(const bool bAiming) const;
 
-	void PlayReloadMontage();
+	void PlayReloadMontage() const;
 	
 	void PlayElimMontage() const;
 
@@ -43,6 +43,9 @@ public:
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay;
 
 protected:
 	virtual void BeginPlay() override;
@@ -96,6 +99,8 @@ protected:
 
 	// For values that are not yet valid on begin play
 	void PollInit();
+	
+	void RotateInPlace(float DeltaTime);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -277,4 +282,8 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
 	ECombatState GetCombatState() const;
+
+	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
+
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };
