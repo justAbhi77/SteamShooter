@@ -19,6 +19,10 @@ public:
 	virtual void Destroyed() override;
 
 protected:
+	
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* CollisionBox;
+	
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
@@ -27,14 +31,13 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float Damage;
-
-private:
-	UPROPERTY(EditAnywhere)
-	class UBoxComponent* CollisionBox;
-
+	
+	void DestroyedCosmetics() const;
+	
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
+private:
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* Tracer;
 

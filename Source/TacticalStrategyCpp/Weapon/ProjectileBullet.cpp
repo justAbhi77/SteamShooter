@@ -1,17 +1,23 @@
 ﻿
 #include "ProjectileBullet.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 AProjectileBullet::AProjectileBullet()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;	
+	
+	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+	ProjectileMovementComponent->bRotationFollowsVelocity = true;
+	ProjectileMovementComponent->SetIsReplicated(true);
+	ProjectileMovementComponent->InitialSpeed = 15000;
+	ProjectileMovementComponent->MaxSpeed = 15000;
 }
 
 void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,

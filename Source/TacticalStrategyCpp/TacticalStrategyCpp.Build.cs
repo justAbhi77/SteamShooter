@@ -8,7 +8,8 @@ public class TacticalStrategyCpp : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "OnlineSubsystem" , "OnlineSubsystemSteam" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", 
+			"OnlineSubsystem" , "OnlineSubsystemSteam", "Niagara" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

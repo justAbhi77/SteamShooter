@@ -27,10 +27,12 @@ AProjectile::AProjectile():
 
 	CollisionBox->SetBoxExtent(FVector(5,2.5f,2.5f), false);
 	
+	/* we are using different projectile movement handler based on ammo type so we don't need this here 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->InitialSpeed = 15000;
 	ProjectileMovementComponent->MaxSpeed = 15000;
+	*/	
 }
 
 void AProjectile::BeginPlay()
@@ -70,10 +72,8 @@ void AProjectile::Tick(const float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AProjectile::Destroyed()
+void AProjectile::DestroyedCosmetics() const
 {
-	Super::Destroyed();
-	
 	if(ImpactParticles)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
@@ -83,5 +83,12 @@ void AProjectile::Destroyed()
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
 	}
+}
+
+void AProjectile::Destroyed()
+{
+	Super::Destroyed();
+	
+	DestroyedCosmetics();
 }
 
