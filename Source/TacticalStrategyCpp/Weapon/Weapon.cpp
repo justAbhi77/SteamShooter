@@ -12,6 +12,7 @@
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 
 AWeapon::AWeapon():
+	MuzzleFlashSocketName("MuzzleFlash"),
 	bIsAutomatic(true),
 	FireDelay(0.15f),
 	ZoomedFov(30.f),

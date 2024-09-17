@@ -24,7 +24,4 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> ProjectileClass;
-
-	UPROPERTY(EditAnywhere)
-	FString MuzzleFlashSocketName;
 };

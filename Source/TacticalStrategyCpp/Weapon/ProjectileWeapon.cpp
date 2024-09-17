@@ -7,8 +7,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 
 
-AProjectileWeapon::AProjectileWeapon():
-	MuzzleFlashSocketName("MuzzleFlash")
+AProjectileWeapon::AProjectileWeapon()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -19,8 +18,7 @@ AProjectileWeapon::AProjectileWeapon():
 
 void AProjectileWeapon::BeginPlay()
 {
-	Super::BeginPlay();
-	
+	Super::BeginPlay();	
 }
 
 void AProjectileWeapon::Tick(const float DeltaTime)

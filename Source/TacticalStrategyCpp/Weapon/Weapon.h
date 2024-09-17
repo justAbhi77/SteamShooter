@@ -48,6 +48,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairsBottom;	
 
+	UPROPERTY(EditAnywhere)
+	FString MuzzleFlashSocketName;
+
 	/**
 	 * Is this weapon automatic
 	 */
