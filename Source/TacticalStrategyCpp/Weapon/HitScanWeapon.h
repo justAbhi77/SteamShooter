@@ -24,6 +24,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ImpactParticles;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* BeamParticles;
 	
 public:
 	virtual void Tick(float DeltaTime) override;
