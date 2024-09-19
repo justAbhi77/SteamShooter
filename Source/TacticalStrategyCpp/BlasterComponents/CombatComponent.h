@@ -163,6 +163,9 @@ private:
 	int32 StartingRocketAmmo;
 	
 	UPROPERTY(EditAnywhere)
+	int32 StartingSmgAmmo;
+	
+	UPROPERTY(EditAnywhere)
 	int32 StartingPistolAmmo;
 	
 	void InitializeCarriedAmmo();

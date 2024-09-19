@@ -3,10 +3,12 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Sound/SoundCue.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 
 AHitScanWeapon::AHitScanWeapon():
-	Damage(20), ImpactParticles(nullptr), BeamParticles(nullptr)
+	Damage(20), ImpactParticles(nullptr), BeamParticles(nullptr), MuzzleFlash(nullptr), FireSound(nullptr),
+	HitSound(nullptr)
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -47,15 +49,22 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 				if(ImpactParticles)
 					UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticles, FireHit.ImpactPoint,
-						FireHit.ImpactNormal.Rotation());			
+						FireHit.ImpactNormal.Rotation());
+				if(HitSound)
+					UGameplayStatics::PlaySoundAtLocation(this, HitSound, FireHit.ImpactPoint);
 			}
 			if(BeamParticles)
 			{
+				// ReSharper disable once CppTooWideScope
 				UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticles,
 					SocketTransform);
 				if(Beam)
 					Beam->SetVectorParameter(FName("Target"), BeamEnd);
 			}
+			if(MuzzleFlash)
+				UGameplayStatics::SpawnEmitterAtLocation(World, MuzzleFlash, SocketTransform);
+			if(FireSound)
+				UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 		}
 	}
 }

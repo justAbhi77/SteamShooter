@@ -32,7 +32,7 @@ UCombatComponent::UCombatComponent():
 	HUDPackage(),
 	bCanFire(true),
 	CarriedAmmo(0),
-	StartingArCarriedAmmo(30),StartingPistolAmmo(45),
+	StartingArCarriedAmmo(30), StartingRocketAmmo(4), StartingSmgAmmo(60), StartingPistolAmmo(45),
 	CombatState(ECombatState::ECS_Unoccupied)
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -356,6 +356,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingArCarriedAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SMG, StartingSmgAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
 }
 
