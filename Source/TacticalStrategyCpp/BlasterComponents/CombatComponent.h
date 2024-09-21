@@ -9,8 +9,6 @@
 #include "TacticalStrategyCpp/Weapon/WeaponTypes.h"
 #include "CombatComponent.generated.h"
 
-#define TRACE_LENGTH 9999.f
-
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TACTICALSTRATEGYCPP_API UCombatComponent : public UActorComponent
 {
@@ -164,6 +162,9 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	int32 StartingSmgAmmo;
+	
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo;
 	
 	UPROPERTY(EditAnywhere)
 	int32 StartingPistolAmmo;

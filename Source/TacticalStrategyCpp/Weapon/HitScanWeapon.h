@@ -18,10 +18,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-private:
 	UPROPERTY(EditAnywhere)
 	float Damage;
-
+	
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ImpactParticles;
 
@@ -36,6 +35,19 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound;
+
+	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget) const;
+
+	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
+	bool bUseScatter;
+	
+	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
+	float DistanceToSphere;
+	
+	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
+	float SphereRadius;
+
+	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit) const;
 	
 public:
 	virtual void Tick(float DeltaTime) override;
