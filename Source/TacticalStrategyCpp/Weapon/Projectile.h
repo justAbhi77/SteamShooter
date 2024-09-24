@@ -36,6 +36,42 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
+	
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailSystem;	
+
+	UPROPERTY()
+	class UNiagaraComponent* TrailSystemComponent;
+
+	void SpawnTrailSystem();
+	
+	FTimerHandle DestroyTimer;
+
+	/**
+	 * Tie after which to destroy rocket so that trail dissipates
+	 */
+	UPROPERTY(EditAnywhere)
+	float DestroyTime;	
+
+	void StartDestroyTimer();
+	virtual void DestroyTimerFinished();
+	
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ProjectileMesh;
+
+	void ExplodeDamage();	
+
+	UPROPERTY(EditAnywhere, Category=Rocket, meta=(AllowPrivateAccess= "true"))
+	float InnerRadius;
+	
+	UPROPERTY(EditAnywhere, Category=Rocket, meta=(AllowPrivateAccess= "true"))
+	float OuterRadius;
+
+	/*
+	 * The fallOf for the damage applied in-between the inner and outer radius  
+	 */
+	UPROPERTY(EditAnywhere, Category=Rocket, meta=(AllowPrivateAccess= "true"))
+	float DamageFallOf;
 
 private:
 	UPROPERTY(EditAnywhere)

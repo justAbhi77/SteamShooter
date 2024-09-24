@@ -213,7 +213,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 }
 
 void AWeapon::Fire(const FVector& HitTarget)
-{
+{	
 	if(FireAnimation)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);

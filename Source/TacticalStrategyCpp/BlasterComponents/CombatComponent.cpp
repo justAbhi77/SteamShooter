@@ -33,7 +33,7 @@ UCombatComponent::UCombatComponent():
 	bCanFire(true),
 	CarriedAmmo(0),
 	StartingArCarriedAmmo(30), StartingRocketAmmo(4), StartingSmgAmmo(60), StartingShotgunAmmo(10),
-	StartingPistolAmmo(45),
+	StartingPistolAmmo(45), StartingSniperAmmo(15),StartingGrenadeAmmo(5),
 	CombatState(ECombatState::ECS_Unoccupied)
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -62,6 +62,7 @@ void UCombatComponent::BeginPlay()
 
 void UCombatComponent::SetAiming(const bool bIsAiming)
 {
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
 
 	if(Character)
@@ -71,6 +72,8 @@ void UCombatComponent::SetAiming(const bool bIsAiming)
 		if(!Character->HasAuthority())
 			ServerSetAiming(bIsAiming);
 	}
+	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+		Character->ShowSniperScopeWidget(bIsAiming);
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -96,6 +99,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		{
 			Reload();
 		}
+		bCanFire = true;
 
 		if(USoundCue* Sound = EquippedWeapon->EquipSound)
 			UGameplayStatics::PlaySoundAtLocation(this, Sound,
@@ -107,6 +111,7 @@ void UCombatComponent::Fire()
 {
 	if(CanFire())
 	{
+		bCanFire = false;
 		Server_Fire(HitTarget);
 
 		if(EquippedWeapon)
@@ -360,6 +365,8 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_SMG, StartingSmgAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
 }
 
 void UCombatComponent::Server_Fire_Implementation(const FVector_NetQuantize& TraceHitTarget)

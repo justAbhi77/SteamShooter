@@ -2,14 +2,17 @@
 
 
 #include "Projectile.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "TacticalStrategyCpp/TacticalStrategyCpp.h"
 
 AProjectile::AProjectile():
-	Damage(10.f)
+	Damage(10.f),
+	InnerRadius(200),
+	OuterRadius(500),
+	DamageFallOf(1) //linear
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
@@ -82,6 +85,37 @@ void AProjectile::DestroyedCosmetics() const
 	if(ImpactSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+	if(TrailSystem)
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem, GetRootComponent(), FName(),
+			GetActorLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition,
+			false);
+	}
+}
+
+void AProjectile::StartDestroyTimer()
+{	
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &ThisClass::DestroyTimerFinished, DestroyTime);
+}
+
+void AProjectile::DestroyTimerFinished()
+{	
+	Destroy();
+}
+
+void AProjectile::ExplodeDamage()
+{	
+	if(const APawn* FiringPawn = GetInstigator(); FiringPawn && HasAuthority())
+	{
+		if(AController* FiringController = FiringPawn->GetController())
+			UGameplayStatics::ApplyRadialDamageWithFalloff(this, Damage, 10.f,
+				GetActorLocation(), InnerRadius, OuterRadius, DamageFallOf,
+				UDamageType::StaticClass(), TArray<AActor*>(), this, FiringController);
 	}
 }
 
