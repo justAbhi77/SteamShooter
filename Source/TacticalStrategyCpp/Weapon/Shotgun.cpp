@@ -1,5 +1,5 @@
-﻿#include "Shotgun.h"
-
+﻿
+#include "Shotgun.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -10,6 +10,7 @@ AShotgun::AShotgun():
 	NumberOfPellets(10)
 {
 	PrimaryActorTick.bCanEverTick = true;
+	MagCapacity = 4;
 }
 
 void AShotgun::BeginPlay()

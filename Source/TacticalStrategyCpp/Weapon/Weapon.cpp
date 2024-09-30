@@ -2,12 +2,12 @@
 
 
 #include "Weapon.h"
-
 #include "Casing.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
+#include "TacticalStrategyCpp/BlasterComponents/CombatComponent.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 
@@ -17,11 +17,11 @@ AWeapon::AWeapon():
 	FireDelay(0.15f),
 	ZoomedFov(30.f),
 	ZoomedInterpSpeed(20.f),
+	Ammo(30),
+	MagCapacity(30),
 	WeaponState(EWeaponState::EWS_Initial),
 	LeftHandSocketName("LeftHandSocket"),
-	AmmoEjectFlashSocketName("AmmoEject"),
-	Ammo(30),
-	MagCapacity(30)
+	AmmoEjectFlashSocketName("AmmoEject")
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
@@ -35,6 +35,10 @@ AWeapon::AWeapon():
 	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
 	WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn,ECR_Ignore);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// Custom depth value for highlight
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+	WeaponMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
 	AreaSphere->SetupAttachment(RootComponent);
@@ -80,6 +84,12 @@ void AWeapon::AddAmmo(const int32 AmmoToAdd)
 	SetHudAmmo();
 }
 
+void AWeapon::EnableCustomDepth(const bool bEnable) const
+{
+	if(WeaponMesh)
+		WeaponMesh->SetRenderCustomDepth(bEnable);
+}
+
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
@@ -118,6 +128,11 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 
 void AWeapon::OnRep_Ammo()
 {
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
+		BlasterOwnerCharacter;
+
+	if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
+		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEnd();
 	SetHudAmmo();
 }
 
@@ -148,6 +163,7 @@ void AWeapon::OnRep_WeaponState() const
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 		}
+		EnableCustomDepth(false);
 		break;
 	case EWeaponState::EWS_Dropped:
 		if(HasAuthority())
@@ -161,6 +177,9 @@ void AWeapon::OnRep_WeaponState() const
 		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
 		WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn,ECR_Ignore);
 		WeaponMesh->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+		WeaponMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		break;
 	case EWeaponState::EWS_MAX:
 		break;
@@ -190,6 +209,11 @@ FTransform AWeapon::GetWeaponSocketLeftHand() const
 bool AWeapon::IsEmpty() const
 {
 	return Ammo <= 0;
+}
+
+bool AWeapon::IsFull() const
+{
+	return Ammo == MagCapacity;
 }
 
 void AWeapon::Tick(const float DeltaTime)

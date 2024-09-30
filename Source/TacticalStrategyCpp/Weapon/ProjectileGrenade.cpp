@@ -30,7 +30,7 @@ void AProjectileGrenade::Destroyed()
 
 void AProjectileGrenade::BeginPlay()
 {
-	AActor::BeginPlay();
+	AActor::BeginPlay(); // skip projectile begin play
 
 	SpawnTrailSystem();
 	StartDestroyTimer();

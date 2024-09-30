@@ -14,17 +14,22 @@ class TACTICALSTRATEGYCPP_API ABlasterPlayerController : public APlayerControlle
 	
 public:
 	ABlasterPlayerController();
+	
 	void SetHudHealth(float Health, float MaxHealth);
+	
 	void SetHudScore(float Score);
 
 	void SetHudDefeats(int32 Defeats);
 	
 	void SetHudWeaponAmmo(int32 Ammo);
+	
 	void SetHudCarriedAmmo(int32 Ammo);
 
 	void SetHudMatchCountDown(const float CountDownTime);
 
 	void SetHudAnnouncementCountDown(const float CountdownTime);
+
+	void SetHudGrenades(int32 Grenades);
 
 	virtual void OnPossess(APawn* InPawn) override;
 
@@ -103,5 +108,5 @@ private:
 	bool bInitializeCharacterOverlay;
 
 	float HudHealth, HudMaxHealth, HudScore;
-	int32 HudDefeats;
+	int32 HudDefeats, HudGrenades;
 };

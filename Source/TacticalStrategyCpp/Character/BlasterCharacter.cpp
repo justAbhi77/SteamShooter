@@ -33,6 +33,7 @@ ABlasterCharacter::ABlasterCharacter():
 	ElimDelay(3.f),
 	DissolveMaterialParam("Dissolve"),
 	WeaponGrabbingHandSocket("hand_r"),
+	GrenadeSocket("GrenadeSocket"),
 	FireMontage_Hip("RifleHip"),
 	FireMontage_Aim("RifleAim")
 {
@@ -81,6 +82,10 @@ ABlasterCharacter::ABlasterCharacter():
 
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AttachedGrenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName(GrenadeSocket));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
@@ -185,6 +190,8 @@ void ABlasterCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
+	if(AttachedGrenade)
+		AttachedGrenade->SetVisibility(false);
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -200,7 +207,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABlasterCharacter::ReloadButtonPressed);
-
+	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ABlasterCharacter::GrenadeButtonPressed);
+	
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABlasterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABlasterCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &ABlasterCharacter::Turn);
@@ -253,22 +261,22 @@ void ABlasterCharacter::PlayReloadMontage() const
 				SectionName = FName("Rifle");
 				break;
 			case EWeaponType::EWT_RocketLauncher:
-				SectionName = FName("Rifle");
+				SectionName = FName("RocketLauncher");
 				break;
 			case EWeaponType::EWT_Pistol:
-				SectionName = FName("Rifle");		
+				SectionName = FName("Pistol");		
 				break;
 			case EWeaponType::EWT_SMG:
-				SectionName = FName("Rifle");
+				SectionName = FName("Pistol"); // Reusing pistol section :)
 				break;
 			case EWeaponType::EWT_Shotgun:
-				SectionName = FName("Rifle");
+				SectionName = FName("Shotgun");
 				break;
 			case EWeaponType::EWT_SniperRifle:
-				SectionName = FName("Rifle");
+				SectionName = FName("SniperRifle");
 				break;
 			case EWeaponType::EWT_GrenadeLauncher:
-				SectionName = FName("Rifle");
+				SectionName = FName("Rifle"); // Reusing pistol section :)
 				break;
 			case EWeaponType::EWT_MAX:
 				break;
@@ -283,6 +291,14 @@ void ABlasterCharacter::PlayElimMontage() const
 	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); AnimInstance && ElimMontage)
 	{
 		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
+void ABlasterCharacter::PlayThrowGrenadeMontage() const
+{
+	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); AnimInstance && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
 	}	
 }
 
@@ -317,6 +333,7 @@ void ABlasterCharacter::OnRep_Health()
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatorController, AActor* DamageCauser)
 {
+	if(bElimmed) return;
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	OnRep_Health();
 	if(Health == 0.f)
@@ -439,6 +456,15 @@ void ABlasterCharacter::AimButtonReleased()
 	{
 		Combat->SetAiming(false);
 		SetAimingSharpness(false);
+	}
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void ABlasterCharacter::GrenadeButtonPressed()
+{
+	if(Combat)
+	{
+		Combat->ThrowGrenade();
 	}
 }
 

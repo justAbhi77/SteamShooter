@@ -71,6 +71,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* EquipSound;
 
+	/**
+	 * Enable/Disable Custom depth for outline of mesh 
+	 * @param bEnable Should we enable the Custom depth
+	 */
+	void EnableCustomDepth(bool bEnable) const;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -95,7 +101,13 @@ protected:
 	 */
 	UPROPERTY(EditAnywhere)
 	float ZoomedInterpSpeed;
-
+	
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+	
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+	
 	UFUNCTION()
 	void OnRep_Ammo();
 
@@ -132,12 +144,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	FString AmmoEjectFlashSocketName;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
-	int32 Ammo;
-	
-	UPROPERTY(EditAnywhere)
-	int32 MagCapacity;
-
 	UPROPERTY()
 	class ABlasterCharacter* BlasterOwnerCharacter;
 
@@ -159,6 +165,7 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomedInterpSpeed; }
 
 	bool IsEmpty() const;
+	bool IsFull() const;
 
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 

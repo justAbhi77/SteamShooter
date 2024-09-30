@@ -29,6 +29,9 @@ public:
 	 */
 	UPROPERTY(EditAnywhere)
 	FString RightHandSocketName;
+	
+	UPROPERTY(EditAnywhere)
+	FString LeftHandSocketName;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
@@ -38,6 +41,20 @@ public:
 	void FinishReloading();
 
 	void FireButtonPressed(bool bPressed);
+
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+
+	void JumpToShotgunEnd() const;
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
+	
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void Server_LaunchGrenade(const FVector_NetQuantize& Target);
 
 protected:
 	virtual void BeginPlay() override;
@@ -72,6 +89,42 @@ protected:
 	int32 AmountToReload();	
 	
 	void UpdateAmmoValues();
+
+	void UpdateShotgunAmmoValues();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString ShotgunReloadEndSectionName;
+
+	void ThrowGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void Server_ThrowGrenade();
+
+	void DropEquippedWeapon() const;
+
+	void AttachActorToRightHand(AActor* ActorToAttach) const;
+	void AttachActorToLeftHand(AActor* ActorToAttach) const;
+
+	void UpdateCarriedAmmo();
+
+	void PlayEquipWeaponSound() const;
+
+	void ReloadEmptyWeapon();
+
+	void ShowAttachedGrenade(bool bShowGrenade) const;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GrenadeClass;
+
+	UPROPERTY(ReplicatedUsing=OnRep_Grenades)
+	int32 Grenades;
+	
+	int32 MaxGrenades;
+
+	UFUNCTION()
+	void OnRep_Grenades();
+
+	void UpdateHudGrenades();
 
 private:
 	UPROPERTY()
@@ -179,6 +232,7 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState;
-public:
 	
+public:
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 };

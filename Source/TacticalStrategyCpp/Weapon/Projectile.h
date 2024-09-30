@@ -61,10 +61,10 @@ protected:
 
 	void ExplodeDamage();	
 
-	UPROPERTY(EditAnywhere, Category=Rocket, meta=(AllowPrivateAccess= "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Rocket, meta=(AllowPrivateAccess= "true"))
 	float InnerRadius;
 	
-	UPROPERTY(EditAnywhere, Category=Rocket, meta=(AllowPrivateAccess= "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Rocket, meta=(AllowPrivateAccess= "true"))
 	float OuterRadius;
 
 	/*

@@ -32,6 +32,8 @@ public:
 	
 	void PlayElimMontage() const;
 
+	void PlayThrowGrenadeMontage() const;
+
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
@@ -71,6 +73,8 @@ protected:
 	void AimButtonPressed();
 
 	void AimButtonReleased();
+
+	void GrenadeButtonPressed();
 	void CalculateAoPitch();
 	float CalculateSpeed() const;
 
@@ -147,7 +151,10 @@ private:
 	UAnimMontage* HitReactMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-	UAnimMontage* ElimMontage;	
+	UAnimMontage* ElimMontage;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ThrowGrenadeMontage;
 
 	void SetAimingSharpness(bool bIsAiming) const;
 
@@ -239,6 +246,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound;
+
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	UStaticMeshComponent* AttachedGrenade;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -257,7 +267,10 @@ public:
 	 * Reference socket (0,0) for IK in the animation graph for the left hand
 	 */
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
-	FString WeaponGrabbingHandSocket;
+	FString WeaponGrabbingHandSocket;	
+	
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	FString GrenadeSocket;
 	
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	
@@ -288,4 +301,8 @@ public:
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
 
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
+
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; } 
 };

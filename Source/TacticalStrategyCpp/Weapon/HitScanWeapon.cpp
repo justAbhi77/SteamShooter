@@ -43,7 +43,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					this, UDamageType::StaticClass());
 		}
 
-		if(ImpactParticles)
+		if(FireHit.bBlockingHit && ImpactParticles)
 			UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticles, FireHit.ImpactPoint,
 				FireHit.ImpactNormal.Rotation());
 		if(HitSound)
@@ -69,12 +69,12 @@ FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVe
 		RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius),
 		EndLoc = SphereCenter + RandVec, ToEndLoc = EndLoc - TraceStart;
 
-	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, false, 1.5f);
+	// DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, false, 1.5f);
 
-	DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, false, 1.5f);
+	// DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, false, 1.5f);
 
 	const FVector Return = TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size();
-	DrawDebugLine(GetWorld(), TraceStart, Return, FColor::Cyan, false, 1.5f);
+	// DrawDebugLine(GetWorld(), TraceStart, Return, FColor::Cyan, false, 1.5f);
 	return Return;
 }
 
@@ -85,7 +85,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		const FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) :
 			TraceStart + (HitTarget - TraceStart) * 1.25;
 
-		World->LineTraceSingleByChannel(OutHit, TraceStart, End, ECC_Visibility);		
+		World->LineTraceSingleByChannel(OutHit, TraceStart, End, ECC_Visibility);	
 
 		if(OutHit.bBlockingHit)
 		{
