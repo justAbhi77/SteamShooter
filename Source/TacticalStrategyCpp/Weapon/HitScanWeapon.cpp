@@ -82,21 +82,27 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 {
 	if(const UWorld* World = GetWorld())
 	{
-		const FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) :
+		FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) :
 			TraceStart + (HitTarget - TraceStart) * 1.25;
 
 		World->LineTraceSingleByChannel(OutHit, TraceStart, End, ECC_Visibility);	
 
 		if(OutHit.bBlockingHit)
 		{
-			if(BeamParticles)
-			{
-				// ReSharper disable once CppTooWideScope
-				UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticles,
-					TraceStart, FRotator::ZeroRotator,true);
-				if(Beam)
-					Beam->SetVectorParameter(FName("Target"), OutHit.ImpactPoint);
-			}
+			End = OutHit.ImpactPoint;
+		}
+		else
+		{
+			End.Normalize();
+			End *= 2500;
+		}
+		if(BeamParticles)
+		{
+			// ReSharper disable once CppTooWideScope
+			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticles,
+				TraceStart, FRotator::ZeroRotator,true);
+			if(Beam)
+				Beam->SetVectorParameter(FName("Target"), End);
 		}
 	}
 }

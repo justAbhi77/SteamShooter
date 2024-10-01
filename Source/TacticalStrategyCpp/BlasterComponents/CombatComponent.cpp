@@ -383,11 +383,11 @@ void UCombatComponent::StartFireTimer()
 void UCombatComponent::FireTimerFinished()
 {
 	if(EquippedWeapon == nullptr) return;
+	ReloadEmptyWeapon();
 	if(bFireButtonPressed && EquippedWeapon->bIsAutomatic)
 	{
 		Fire();
 	}
-	ReloadEmptyWeapon();
 }
 
 bool UCombatComponent::CanFire() const
