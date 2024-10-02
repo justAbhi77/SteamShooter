@@ -56,6 +56,8 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_LaunchGrenade(const FVector_NetQuantize& Target);
 
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
+
 protected:
 	virtual void BeginPlay() override;
 

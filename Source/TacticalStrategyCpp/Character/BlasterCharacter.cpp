@@ -13,6 +13,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "TacticalStrategyCpp/TacticalStrategyCpp.h"
+#include "TacticalStrategyCpp/BlasterComponents/BuffComponent.h"
 #include "TacticalStrategyCpp/BlasterComponents/CombatComponent.h"
 #include "TacticalStrategyCpp/GameMode/BlasterGameMode.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
@@ -59,6 +60,9 @@ ABlasterCharacter::ABlasterCharacter():
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
+
+	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	Buff->SetIsReplicated(true);
 
 	DissolveTimeLine = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComp"));
 
@@ -230,9 +234,9 @@ void ABlasterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	if(Combat)
-	{
 		Combat->Character = this;
-	}
+	if(Buff)
+		Buff->Character = this;
 }
 
 void ABlasterCharacter::PlayFireMontage(const bool bAiming) const

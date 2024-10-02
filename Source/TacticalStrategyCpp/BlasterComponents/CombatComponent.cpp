@@ -47,6 +47,18 @@ UCombatComponent::UCombatComponent():
 	AimWalkSpeed = 450.f;
 }
 
+void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
+{
+	if(CarriedAmmoMap.Contains(WeaponType))
+	{
+		CarriedAmmoMap[WeaponType] += AmmoAmount;
+
+		UpdateCarriedAmmo();
+	}
+	if(EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
+		Reload();
+}
+
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
