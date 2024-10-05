@@ -21,14 +21,14 @@ protected:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(VisibleAnywhere)
 	class URotatingMovementComponent* Rotation;
 	
 	UPROPERTY(EditAnywhere)
 	int32 AmmoAmount;
 
 	UPROPERTY(EditAnywhere)
-	EWeaponType WeaponType;
+	EWeaponType AmmoType;
 public:
 	virtual void Tick(float DeltaTime) override;
 };

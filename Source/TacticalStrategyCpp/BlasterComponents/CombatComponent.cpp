@@ -43,20 +43,49 @@ UCombatComponent::UCombatComponent():
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
+	MaxCarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, 99);
+	MaxCarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, 9);
+	MaxCarriedAmmoMap.Emplace(EWeaponType::EWT_SMG, 149);
+	MaxCarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, 25);
+	MaxCarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, 50);
+	MaxCarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, 14);
+	MaxCarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, 12);
+
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 450.f;
 }
 
-void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
+bool UCombatComponent::PickupAmmo(EWeaponType AmmoType, const int32 AmmoAmount)
 {
-	if(CarriedAmmoMap.Contains(WeaponType))
+	bool Ret = false;
+	if(AmmoType == EWeaponType::EWT_MAX)
 	{
-		CarriedAmmoMap[WeaponType] += AmmoAmount;
+		if(EquippedWeapon)
+			AmmoType = EquippedWeapon->GetWeaponType();
+		else
+		{
+			if(Grenades != MaxGrenades)
+			{
+				Grenades = FMath::Clamp(Grenades + 1, 0, MaxGrenades);
+				UpdateHudGrenades();
+				Ret = true;
+			}
+		}
+	}
+	if(CarriedAmmoMap.Contains(AmmoType))
+	{
+		if(CarriedAmmoMap[AmmoType] != MaxCarriedAmmoMap[AmmoType])
+		CarriedAmmoMap[AmmoType] = FMath::Clamp(CarriedAmmoMap[AmmoType] + AmmoAmount, 0,
+			MaxCarriedAmmoMap[AmmoType]);
 
 		UpdateCarriedAmmo();
+
+		Ret = true;
 	}
-	if(EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
+	if(EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == AmmoType)
 		Reload();
+
+	return Ret;
 }
 
 void UCombatComponent::BeginPlay()
@@ -560,7 +589,8 @@ void UCombatComponent::UpdateShotgunAmmoValues()
 void UCombatComponent::ThrowGrenade()
 {
 	if(Grenades == 0) return;
-	if(CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr) return;
+	// || EquippedWeapon == nullptr
+	if(CombatState != ECombatState::ECS_Unoccupied) return;
 	
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	OnRep_CombatState();

@@ -8,7 +8,7 @@
 AAmmoPickup::AAmmoPickup():
 	Rotation(),
 	AmmoAmount(30),
-	WeaponType(EWeaponType::EWT_MAX)
+	AmmoType(EWeaponType::EWT_MAX)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -33,7 +33,7 @@ void AAmmoPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if(UCombatComponent* Combat = BlasterCharacter->GetCombatComponent())
 		{
-			Combat->PickupAmmo(WeaponType, AmmoAmount);
+			Combat->PickupAmmo(AmmoType, AmmoAmount);
 		}
 	}
 	Destroy();
