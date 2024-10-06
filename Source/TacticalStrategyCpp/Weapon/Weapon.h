@@ -12,6 +12,7 @@ enum class EWeaponState: uint8
 {
 	EWS_Initial UMETA (DisplayName = "Initial State"),
 	EWS_Equipped UMETA (DisplayName = "Equipped"),
+	EWS_EquippedSecondary UMETA (DisplayName = "Equipped Secondary"),
 	EWS_Dropped UMETA (DisplayName = "Dropped"),
 	
 	EWS_MAX UMETA (DisplayName = "DefaultMAX")
@@ -76,6 +77,8 @@ public:
 	 * @param bEnable Should we enable the Custom depth
 	 */
 	void EnableCustomDepth(bool bEnable) const;
+
+	bool bDestroyWeapon = false;
 
 protected:
 	virtual void BeginPlay() override;

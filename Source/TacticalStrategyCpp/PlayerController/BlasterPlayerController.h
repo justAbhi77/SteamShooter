@@ -16,6 +16,7 @@ public:
 	ABlasterPlayerController();
 	
 	void SetHudHealth(float Health, float MaxHealth);
+	void SetHudShield(float Shield, float MaxShield);
 	
 	void SetHudScore(float Score);
 
@@ -105,8 +106,9 @@ private:
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
 
-	bool bInitializeCharacterOverlay;
-
-	float HudHealth, HudMaxHealth, HudScore;
+	float HudHealth, HudMaxHealth, HudScore, HudShield, HudMaxShield, HudCarriedAmmo, HudWeaponAmmo;
 	int32 HudDefeats, HudGrenades;
+
+	bool bInitializeHealth = false, bInitializeScore = false, bInitializeDefeats = false, bInitializeGrenades = false,
+		bInitializeShields = false, bInitializeCarriedAmmo = false, bInitializeWeaponAmmo = false;
 };

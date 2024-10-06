@@ -32,8 +32,16 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 	FString LeftHandSocketName;
+	
+	UPROPERTY(EditAnywhere)
+	FString BackpackSocketName;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void SwapWeapons();
+
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 
 	void Reload();
 	
@@ -68,6 +76,10 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+	
+	UFUNCTION()
+	void OnRep_SecondaryWeapon() const;
+	
 	void Fire();
 
 	UFUNCTION(Server, Reliable)
@@ -106,10 +118,11 @@ protected:
 
 	void AttachActorToRightHand(AActor* ActorToAttach) const;
 	void AttachActorToLeftHand(AActor* ActorToAttach) const;
+	void AttachActorToBackPack(AActor* ActorToAttach) const;
 
 	void UpdateCarriedAmmo();
 
-	void PlayEquipWeaponSound() const;
+	void PlayEquipWeaponSound(const AWeapon* WeaponToEquip) const;
 
 	void ReloadEmptyWeapon();
 
@@ -127,7 +140,6 @@ protected:
 	void OnRep_Grenades();
 
 	void UpdateHudGrenades();
-
 private:
 	UPROPERTY()
 	ABlasterCharacter* Character;
@@ -140,6 +152,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool bAiming;
@@ -240,4 +255,6 @@ private:
 	
 public:
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+
+	bool ShouldSwapWeapons() const;
 };

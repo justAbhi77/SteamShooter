@@ -15,17 +15,16 @@ class TACTICALSTRATEGYCPP_API UOverheadWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
 	class UTextBlock* DisplayText;
 
 	void SetDisplayText(const FString& TextToDisplay) const;
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerNetRole(const APawn* InPawn) const;
-
 	
 	UFUNCTION(BlueprintCallable)
-	void ShowPlayerName(const APawn* InPawn) const;
+	void ShowPlayerName(const FString& TextToDisplay) const;
 
 protected:	
 	virtual void NativeDestruct() override; // used instead of OnLevelRemoveFromWorld

@@ -15,14 +15,14 @@
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent():
 	RightHandSocketName(FString("RightHandSocket")),
-	LeftHandSocketName(FString("LeftHandSocket")),
+	LeftHandSocketName(FString("LeftHandSocket")),BackpackSocketName(FString("BackpackSocket")),
 	ShotgunReloadEndSectionName("ShotgunEnd"),
 	Grenades(4),
 	MaxGrenades(4),
 	Character(nullptr),
 	Controller(nullptr),
 	Hud(nullptr),
-	EquippedWeapon(nullptr),
+	EquippedWeapon(nullptr), SecondaryWeapon(nullptr),
 	bAiming(false),
 	bFireButtonPressed(false),
 	CrosshairBaseLineSpread(0.5f),
@@ -35,7 +35,7 @@ UCombatComponent::UCombatComponent():
 	ZoomInterpSpeed(20.f),
 	CurrentFov(0),
 	HUDPackage(), bCanFire(true), CarriedAmmo(0), StartingArCarriedAmmo(30),
-	StartingRocketAmmo(4), StartingSmgAmmo(60),StartingShotgunAmmo(10),
+	StartingRocketAmmo(4), StartingSmgAmmo(60), StartingShotgunAmmo(10),
 	StartingPistolAmmo(45),
 	StartingSniperAmmo(15),
 	StartingGrenadeAmmo(5),
@@ -137,7 +137,19 @@ void UCombatComponent::OnRep_EquippedWeapon()
 
 		ReloadEmptyWeapon();
 
-		PlayEquipWeaponSound();
+		PlayEquipWeaponSound(EquippedWeapon);
+		
+		EquippedWeapon->SetHudAmmo();
+	}
+}
+
+void UCombatComponent::OnRep_SecondaryWeapon() const
+{
+	if(SecondaryWeapon && Character)
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary, true);
+		AttachActorToBackPack(SecondaryWeapon);
+		PlayEquipWeaponSound(SecondaryWeapon);
 	}
 }
 
@@ -462,6 +474,11 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
 }
 
+bool UCombatComponent::ShouldSwapWeapons() const
+{
+	return (EquippedWeapon != nullptr) && (SecondaryWeapon != nullptr);
+}
+
 void UCombatComponent::Server_Fire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	Multicast_Fire(TraceHitTarget);
@@ -515,6 +532,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
+	
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
@@ -530,6 +549,30 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	if(CombatState != ECombatState::ECS_Unoccupied) return;
 
+	if(EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+		EquipSecondaryWeapon(WeaponToEquip);
+	else
+		EquipPrimaryWeapon(WeaponToEquip);
+}
+
+void UCombatComponent::SwapWeapons()
+{
+	AWeapon* TempWeapon = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = TempWeapon;
+
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToRightHand(EquippedWeapon);
+	EquippedWeapon->SetHudAmmo();
+	UpdateCarriedAmmo();
+	PlayEquipWeaponSound(EquippedWeapon);
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	AttachActorToBackPack(SecondaryWeapon);
+}
+
+void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
+{
 	DropEquippedWeapon();
 
 	EquippedWeapon = WeaponToEquip;
@@ -540,6 +583,19 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		OnRep_EquippedWeapon();
 		if(EquippedWeapon)
 			EquippedWeapon->OnRep_Owner();
+	}
+}
+
+void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+{
+	SecondaryWeapon = WeaponToEquip;
+	SecondaryWeapon->SetOwner(Character);
+
+	if(Character->HasAuthority())
+	{
+		OnRep_SecondaryWeapon();
+		if(SecondaryWeapon)
+			SecondaryWeapon->OnRep_Owner();
 	}
 }
 
@@ -627,6 +683,17 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach) const
 	}
 }
 
+void UCombatComponent::AttachActorToBackPack(AActor* ActorToAttach) const
+{
+	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
+	
+	USkeletalMeshComponent* SkeletalMeshComponent = Character->GetMesh();
+	if(const USkeletalMeshSocket* BackpackSocket = SkeletalMeshComponent->GetSocketByName(FName(BackpackSocketName)))
+	{
+		BackpackSocket->AttachActor(ActorToAttach, SkeletalMeshComponent);
+	}
+}
+
 void UCombatComponent::UpdateCarriedAmmo()
 {
 	if(EquippedWeapon == nullptr) return;
@@ -636,11 +703,11 @@ void UCombatComponent::UpdateCarriedAmmo()
 		OnRep_CarriedAmmo();
 }
 
-void UCombatComponent::PlayEquipWeaponSound() const
+void UCombatComponent::PlayEquipWeaponSound(const AWeapon* WeaponToEquip) const
 {
-	if(Character && EquippedWeapon)
+	if(Character && WeaponToEquip)
 	{
-		if(USoundCue* Sound = EquippedWeapon->EquipSound)
+		if(USoundCue* Sound = WeaponToEquip->EquipSound)
 			UGameplayStatics::PlaySoundAtLocation(this, Sound,
 				Character->GetActorLocation());
 	}

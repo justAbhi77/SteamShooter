@@ -21,4 +21,6 @@ public:
 
 	UPROPERTY(EditAnywhere);
 	FString MainGameMapPath;
+
+	FTimerHandle PostLoginWaitTime;
 };

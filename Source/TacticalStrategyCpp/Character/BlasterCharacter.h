@@ -50,7 +50,18 @@ public:
 	bool bDisableGameplay;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ShowSniperScopeWidget(const bool bShowScope);
+	void ShowSniperScopeWidget(const bool bShowScope);	
+	
+	void UpdateHudHealth();
+	
+	void UpdateHudShield();	
+
+	void UpdateHudAmmo();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void SetName(const FString& Name);
+
+	void SpawnDefaultWeapon() const;
 protected:
 	virtual void BeginPlay() override;
 
@@ -90,12 +101,13 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	
-	void PlayHitReactMontage() const;	
-	
-	void UpdateHudHealth();
+	void PlayHitReactMontage() const;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
+	
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
@@ -108,6 +120,7 @@ protected:
 	
 	void RotateInPlace(float DeltaTime);
 
+	void DropOrDestroyWeapon(class AWeapon* Weapon);
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -183,6 +196,12 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health;
 
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 100;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, EditAnywhere, Category = "Player Stats")
+	float Shield = 0;
+	
 	bool bElimmed;
 
 	FTimerHandle ElimTimer;
@@ -252,6 +271,9 @@ private:
 
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
 	UStaticMeshComponent* AttachedGrenade;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -297,11 +319,21 @@ public:
 	
 	FORCEINLINE float GetHealth() const { return Health; }
 	
+	FORCEINLINE float GetShield() const { return Shield; }
+
+	FORCEINLINE void SetHealth(const float Amount) { Health = Amount; }
+	
+	FORCEINLINE void SetShield(const float Amount) { Shield = Amount; }
+	
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 
 	ECombatState GetCombatState() const;
 
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
+
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return Buff; }
 
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 

@@ -74,7 +74,11 @@ void AWeapon::OnRep_Owner()
 	}
 	else
 	{
-		SetHudAmmo();
+		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
+			BlasterOwnerCharacter;
+		if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetEquippedWeapon() &&
+			BlasterOwnerCharacter->GetEquippedWeapon() == this)
+			SetHudAmmo();
 	}
 }
 
@@ -164,6 +168,25 @@ void AWeapon::OnRep_WeaponState() const
 			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 		}
 		EnableCustomDepth(false);
+		break;
+	case EWeaponState::EWS_EquippedSecondary:		
+		ShowPickupWidget(false);
+		if(HasAuthority())
+		{
+			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if(WeaponType == EWeaponType::EWT_SMG)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+		}
+		GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		GetWeaponMesh()->MarkRenderStateDirty();		
+		EnableCustomDepth(true);
 		break;
 	case EWeaponState::EWS_Dropped:
 		if(HasAuthority())

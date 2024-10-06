@@ -44,18 +44,9 @@ void UOverheadWidget::ShowPlayerNetRole(const APawn* InPawn) const
 	}
 }
 
-void UOverheadWidget::ShowPlayerName(const APawn* InPawn) const
-{	
-	if(InPawn)
-	{
-		FString PlayerName{""};
-		if(const APlayerState* PlayerState = InPawn->GetPlayerState())
-		{
-			PlayerName = PlayerState->GetPlayerName();
-		}
-		
-		SetDisplayText(PlayerName);
-	}
+void UOverheadWidget::ShowPlayerName(const FString& TextToDisplay) const
+{
+	SetDisplayText(TextToDisplay);
 }
 
 void UOverheadWidget::NativeDestruct()

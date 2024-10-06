@@ -24,6 +24,9 @@ protected:
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UPROPERTY()
+	AActor* OverlappedActor;
+
 private:
 	UPROPERTY(EditAnywhere)
 	class USphereComponent* OverlapSphere;
@@ -32,6 +35,18 @@ private:
 	class USoundCue* PickupSound;
 
 	UPROPERTY(EditAnywhere)
-	class UStaticMeshComponent* PickupMesh;
+	class UStaticMeshComponent* PickupMesh;	
+
+	UPROPERTY(VisibleAnywhere)
+	class UNiagaraComponent* PickupEffectComponent;
+	
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* PickupEffect;
+
+	FTimerHandle BindOverlapTimer;
+
+	float BindOverlapTime = 0.25f;
+
+	void BindOverlapTimerFinished();
 public:
 };

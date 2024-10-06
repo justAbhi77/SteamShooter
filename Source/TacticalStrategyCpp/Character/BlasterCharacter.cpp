@@ -40,7 +40,7 @@ ABlasterCharacter::ABlasterCharacter():
 {
 	PrimaryActorTick.bCanEverTick = true;
 	
-	// Always spawn even if players are at player spawn (number os player spawns < players in game)
+	// Always spawn even if players are at player spawn (number of player spawns < players in game)
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -100,11 +100,29 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0;
 }
 
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if(Weapon == nullptr) return;
+	
+	if(Weapon->bDestroyWeapon)
+		Weapon->Destroy();
+	else
+		Weapon->Dropped();
+}
+
 void ABlasterCharacter::Elim()
 {
-	if(Combat && Combat->EquippedWeapon)
+	if(Combat)
 	{
-		Combat->EquippedWeapon->Dropped();
+		if(Combat->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
+		}
+		if(Combat->SecondaryWeapon)
+		{
+			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
 	}
 	Multicast_Elim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
@@ -184,18 +202,36 @@ void ABlasterCharacter::Destroyed()
 		Combat-> EquippedWeapon->Destroy();
 }
 
+void ABlasterCharacter::SpawnDefaultWeapon() const
+{
+	UWorld* World = GetWorld();
+	// ReSharper disable once CppTooWideScopeInitStatement
+	const ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	if(World && BlasterGameMode && !bElimmed && DefaultWeaponClass)
+	{
+		AWeapon* StartingWeapon =  World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
+		if(Combat)
+			Combat->EquipWeapon(StartingWeapon);
+	}
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UpdateHudHealth();
-
+	SpawnDefaultWeapon();
+	
 	if(HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
 	if(AttachedGrenade)
 		AttachedGrenade->SetVisibility(false);
+
+	UpdateHudHealth();
+	UpdateHudShield();
+	UpdateHudAmmo();
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -226,6 +262,8 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	
+	DOREPLIFETIME(ABlasterCharacter, Shield);
 
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
@@ -236,7 +274,12 @@ void ABlasterCharacter::PostInitializeComponents()
 	if(Combat)
 		Combat->Character = this;
 	if(Buff)
+	{
 		Buff->Character = this;
+		Buff->SetInitialSpeed(GetCharacterMovement()->MaxWalkSpeed,
+			GetCharacterMovement()->MaxWalkSpeedCrouched);
+		Buff->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
+	}
 }
 
 void ABlasterCharacter::PlayFireMontage(const bool bAiming) const
@@ -320,7 +363,8 @@ void ABlasterCharacter::PlayHitReactMontage() const
 
 void ABlasterCharacter::UpdateHudHealth()
 {
-	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :
+		BlasterPlayerController;
 	
 	if(BlasterPlayerController)
 	{
@@ -328,18 +372,65 @@ void ABlasterCharacter::UpdateHudHealth()
 	}
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::UpdateHudShield()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :
+		BlasterPlayerController;
+	
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHudShield(Shield, MaxShield);
+	}
+}
+
+void ABlasterCharacter::UpdateHudAmmo()
+{	
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :
+		BlasterPlayerController;
+	
+	if(BlasterPlayerController && Combat && Combat->EquippedWeapon)
+	{
+		BlasterPlayerController->SetHudCarriedAmmo(Combat->CarriedAmmo);
+		BlasterPlayerController->SetHudWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
+	}
+}
+void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHudHealth();
-	PlayHitReactMontage();
+	if(Health < LastHealth)
+		PlayHitReactMontage();
+}
+
+void ABlasterCharacter::OnRep_Shield(float LastShield)
+{
+	UpdateHudShield();
+	if(Shield<LastShield)
+		PlayHitReactMontage();
 }
 
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-	AController* InstigatorController, AActor* DamageCauser)
+                                      AController* InstigatorController, AActor* DamageCauser)
 {
 	if(bElimmed) return;
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
-	OnRep_Health();
+
+	float DamageToHealth = Damage;
+	if(Shield > 0)
+	{
+		if(Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0, MaxShield);
+			DamageToHealth = 0;
+		}
+		else
+		{
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0, Damage);
+			Shield = 0;
+		}
+	}
+	
+	const float PrevHealth = Health;
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
+	OnRep_Health(PrevHealth);
 	if(Health == 0.f)
 		if(ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
 		{
@@ -402,14 +493,7 @@ void ABlasterCharacter::EquipButtonPressed()
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
-		if(HasAuthority())
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipButtonPressed();
-		}
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -613,7 +697,13 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(const AWeapon* LastWeapon) const
 
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
-	EquipButtonPressed();
+	if(Combat)
+	{
+		if(OverlappingWeapon)
+			Combat->EquipWeapon(OverlappingWeapon);
+		else if(Combat->ShouldSwapWeapons())
+			Combat->SwapWeapons();
+	}
 }
 
 void ABlasterCharacter::TurnInPlace(float DeltaTime)
@@ -768,6 +858,13 @@ void ABlasterCharacter::RotateInPlace(const float DeltaTime)
 
 		CalculateAoPitch();
 	}
+}
+
+void ABlasterCharacter::SetName_Implementation(const FString& Name)
+{
+	if(GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Orange,
+			FString::Printf(TEXT("Player name is: %s "), *Name));
 }
 
 void ABlasterCharacter::Tick(const float DeltaTime)
