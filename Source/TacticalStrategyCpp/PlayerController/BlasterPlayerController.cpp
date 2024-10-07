@@ -92,7 +92,7 @@ void ABlasterPlayerController::PollInit()
 				if(bInitializeWeaponAmmo) SetHudWeaponAmmo(HudWeaponAmmo);
 				
 				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
-				if(BlasterCharacter && BlasterCharacter->GetCombatComponent())					
+				if(BlasterCharacter && BlasterCharacter->GetCombatComponent())			
 					if(bInitializeGrenades) SetHudGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());
 			}
 		}
@@ -166,9 +166,8 @@ void ABlasterPlayerController::Client_ReportServerTime_Implementation(const floa
 void ABlasterPlayerController::SetHudHealth(const float Health, const float MaxHealth)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;
 			
-	if(CharacterOverlay && CharacterOverlay->HealthBar && CharacterOverlay->HealthText)
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->HealthBar && CharacterOverlay->HealthText)
 	{		
 		const float HealthPercent = Health/MaxHealth;
 		CharacterOverlay->HealthBar->SetPercent(HealthPercent);
@@ -186,9 +185,8 @@ void ABlasterPlayerController::SetHudHealth(const float Health, const float MaxH
 void ABlasterPlayerController::SetHudShield(float Shield, float MaxShield)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;
 			
-	if(CharacterOverlay && CharacterOverlay->ShieldBar && CharacterOverlay->ShieldText)
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->ShieldBar && CharacterOverlay->ShieldText)
 	{		
 		const float ShieldPercent = Shield/MaxShield;
 		CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
@@ -206,9 +204,8 @@ void ABlasterPlayerController::SetHudShield(float Shield, float MaxShield)
 void ABlasterPlayerController::SetHudScore(const float Score)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;
 		
-	if(CharacterOverlay && CharacterOverlay->ScoreText)
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->ScoreText)
 	{
 		const FString Text = FString::Printf(TEXT("%d"), FMath::CeilToInt(Score) );
 		CharacterOverlay->ScoreText->SetText(FText::FromString(Text));
@@ -223,9 +220,8 @@ void ABlasterPlayerController::SetHudScore(const float Score)
 void ABlasterPlayerController::SetHudDefeats(int32 Defeats)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;
 	
-	if(CharacterOverlay && CharacterOverlay->DefeatText)
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->DefeatText)
 	{
 		const FString Text = FString::Printf(TEXT("%d"), Defeats);
 		CharacterOverlay->DefeatText->SetText(FText::FromString(Text));
@@ -240,9 +236,8 @@ void ABlasterPlayerController::SetHudDefeats(int32 Defeats)
 void ABlasterPlayerController::SetHudWeaponAmmo(const int32 Ammo)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;
 		
-	if(CharacterOverlay && CharacterOverlay->WeaponAmmoText)
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->WeaponAmmoText)
 	{
 		const FString Text = FString::Printf(TEXT("%d"), Ammo);
 		CharacterOverlay->WeaponAmmoText->SetText(FText::FromString(Text));
@@ -257,9 +252,8 @@ void ABlasterPlayerController::SetHudWeaponAmmo(const int32 Ammo)
 void ABlasterPlayerController::SetHudCarriedAmmo(int32 Ammo)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;	
 		
-	if(CharacterOverlay && CharacterOverlay->CarriedAmmoText)
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->CarriedAmmoText)
 	{
 		const FString Text = FString::Printf(TEXT("%d"), Ammo);
 		CharacterOverlay->CarriedAmmoText->SetText(FText::FromString(Text));
@@ -274,9 +268,8 @@ void ABlasterPlayerController::SetHudCarriedAmmo(int32 Ammo)
 void ABlasterPlayerController::SetHudMatchCountDown(const float CountDownTime)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;
 		
-	if(CharacterOverlay && CharacterOverlay->MatchCountDownText)
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->MatchCountDownText)
 	{		
 		if(CountDownTime < 0.f)
 		{
@@ -314,9 +307,8 @@ void ABlasterPlayerController::SetHudAnnouncementCountDown(const float Countdown
 void ABlasterPlayerController::SetHudGrenades(int32 Grenades)
 {
 	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
-	if(BlasterHud == nullptr) return;	
 		
-	if(CharacterOverlay && CharacterOverlay->GrenadesText)
+	if(BlasterHud != nullptr && CharacterOverlay != nullptr && CharacterOverlay->GrenadesText != nullptr)
 	{
 		const FString Text = FString::Printf(TEXT("%d"), Grenades);
 		CharacterOverlay->GrenadesText->SetText(FText::FromString(Text));

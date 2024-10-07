@@ -231,6 +231,7 @@ void ABlasterCharacter::BeginPlay()
 
 	UpdateHudHealth();
 	UpdateHudShield();
+	UpdateHudGrenade();
 	UpdateHudAmmo();
 }
 
@@ -383,6 +384,15 @@ void ABlasterCharacter::UpdateHudShield()
 	}
 }
 
+void ABlasterCharacter::UpdateHudGrenade()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :
+		BlasterPlayerController;
+	
+	if(BlasterPlayerController && Combat)
+		BlasterPlayerController->SetHudGrenades(Combat->Grenades);
+}
+
 void ABlasterCharacter::UpdateHudAmmo()
 {	
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :
@@ -414,6 +424,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	if(bElimmed) return;
 
 	float DamageToHealth = Damage;
+	const float PrevShield = Shield;
 	if(Shield > 0)
 	{
 		if(Shield >= Damage)
@@ -427,6 +438,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 			Shield = 0;
 		}
 	}
+	OnRep_Shield(PrevShield);
 	
 	const float PrevHealth = Health;
 	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);

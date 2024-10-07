@@ -54,7 +54,9 @@ public:
 	
 	void UpdateHudHealth();
 	
-	void UpdateHudShield();	
+	void UpdateHudShield();
+	
+	void UpdateHudGrenade();
 
 	void UpdateHudAmmo();
 
