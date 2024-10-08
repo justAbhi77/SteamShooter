@@ -4,7 +4,6 @@
 #include "LobbyGameMode.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
-#include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -42,14 +41,6 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 				const FString PlayerName = PlayerState->GetPlayerName();
 				GEngine->AddOnScreenDebugMessage(-1,60.f,FColor::Cyan,
 					FString::Printf(TEXT("%s has joined the game"), *PlayerName));
-				
-				if(NewPlayer->GetPawn())
-				{
-					if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(NewPlayer->GetPawn()))
-					{
-						BlasterCharacter->SetName(PlayerName);
-					}
-				}
 			}
 		}
 	}

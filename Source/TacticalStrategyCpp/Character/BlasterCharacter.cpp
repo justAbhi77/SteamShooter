@@ -414,8 +414,6 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 void ABlasterCharacter::OnRep_Shield(float LastShield)
 {
 	UpdateHudShield();
-	if(Shield<LastShield)
-		PlayHitReactMontage();
 }
 
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
@@ -870,13 +868,6 @@ void ABlasterCharacter::RotateInPlace(const float DeltaTime)
 
 		CalculateAoPitch();
 	}
-}
-
-void ABlasterCharacter::SetName_Implementation(const FString& Name)
-{
-	if(GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Orange,
-			FString::Printf(TEXT("Player name is: %s "), *Name));
 }
 
 void ABlasterCharacter::Tick(const float DeltaTime)

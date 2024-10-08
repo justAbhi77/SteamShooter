@@ -60,9 +60,6 @@ public:
 
 	void UpdateHudAmmo();
 
-	UFUNCTION(BlueprintNativeEvent)
-	void SetName(const FString& Name);
-
 	void SpawnDefaultWeapon() const;
 protected:
 	virtual void BeginPlay() override;
