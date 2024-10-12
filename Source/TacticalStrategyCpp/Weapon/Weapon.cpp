@@ -1,11 +1,11 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Weapon.h"
 #include "Casing.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "TacticalStrategyCpp/BlasterComponents/CombatComponent.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
@@ -19,9 +19,10 @@ AWeapon::AWeapon():
 	ZoomedInterpSpeed(20.f),
 	Ammo(30),
 	MagCapacity(30),
+	DistanceToSphere(800),
+	SphereRadius(75),
 	WeaponState(EWeaponState::EWS_Initial),
-	LeftHandSocketName("LeftHandSocket"),
-	AmmoEjectFlashSocketName("AmmoEject")
+	LeftHandSocketName("LeftHandSocket"), AmmoEjectFlashSocketName("AmmoEject")
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
@@ -84,8 +85,9 @@ void AWeapon::OnRep_Owner()
 
 void AWeapon::AddAmmo(const int32 AmmoToAdd)
 {
-	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MagCapacity);
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
 	SetHudAmmo();
+	ClientAddAmmo(AmmoToAdd);
 }
 
 void AWeapon::EnableCustomDepth(const bool bEnable) const
@@ -98,14 +100,11 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(HasAuthority())
-	{
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		AreaSphere->SetCollisionResponseToChannel (ECC_Pawn, ECR_Overlap);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	AreaSphere->SetCollisionResponseToChannel (ECC_Pawn, ECR_Overlap);
 
-		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
-		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
-	}
+	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
+	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
 	
 	if(PickupWidget)
 		PickupWidget->SetVisibility(false);
@@ -130,20 +129,35 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}	
 }
 
-void AWeapon::OnRep_Ammo()
-{
-	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
-		BlasterOwnerCharacter;
-
-	if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
-		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEnd();
-	SetHudAmmo();
-}
-
 void AWeapon::SpendRound()
 {
 	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
-	OnRep_Ammo();
+	SetHudAmmo();
+	if(HasAuthority())
+		ClientUpdateAmmo(Ammo);
+	else
+		AmmoSequence++;
+}
+
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+{
+	if(HasAuthority()) return;
+	
+	Ammo = ServerAmmo;
+	--AmmoSequence;
+	Ammo -= AmmoSequence;
+	SetHudAmmo();
+}
+
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if(HasAuthority()) return;
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
+		BlasterOwnerCharacter;
+	if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
+		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEnd();
+	SetHudAmmo();
 }
 
 void AWeapon::OnRep_WeaponState() const
@@ -255,8 +269,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	
-	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::Fire(const FVector& HitTarget)
@@ -295,3 +307,24 @@ void AWeapon::Dropped()
 	
 }
 
+FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget) const
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName));
+	if(MuzzleFlashSocket == nullptr) return FVector();
+	
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector TraceStart = SocketTransform.GetLocation();
+	
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal(),
+		SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere,
+		RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius),
+		EndLoc = SphereCenter + RandVec, ToEndLoc = EndLoc - TraceStart;
+
+	// DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, false, 1.5f);
+
+	// DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, false, 1.5f);
+
+	const FVector Return = TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size();
+	// DrawDebugLine(GetWorld(), TraceStart, Return, FColor::Cyan, false, 1.5f);
+	return Return;
+}

@@ -2,14 +2,13 @@
 #include "HitScanWeapon.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 
 AHitScanWeapon::AHitScanWeapon():
 	Damage(20), ImpactParticles(nullptr), BeamParticles(nullptr), MuzzleFlash(nullptr), FireSound(nullptr),
-	HitSound(nullptr), bUseScatter(false), DistanceToSphere(800), SphereRadius(75)
+	HitSound(nullptr)
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -62,28 +61,12 @@ void AHitScanWeapon::BeginPlay()
 	
 }
 
-FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget) const
-{
-	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal(),
-		SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere,
-		RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius),
-		EndLoc = SphereCenter + RandVec, ToEndLoc = EndLoc - TraceStart;
-
-	// DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, false, 1.5f);
-
-	// DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, false, 1.5f);
-
-	const FVector Return = TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size();
-	// DrawDebugLine(GetWorld(), TraceStart, Return, FColor::Cyan, false, 1.5f);
-	return Return;
-}
-
 void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit) const
 {
 	if(const UWorld* World = GetWorld())
 	{
-		FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) :
-			TraceStart + (HitTarget - TraceStart) * 1.25;
+		// bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) :
+		FVector End = TraceStart + (HitTarget - TraceStart) * 1.25;
 
 		World->LineTraceSingleByChannel(OutHit, TraceStart, End, ECC_Visibility);	
 

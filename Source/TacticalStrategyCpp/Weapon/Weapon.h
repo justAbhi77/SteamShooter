@@ -18,6 +18,16 @@ enum class EWeaponState: uint8
 	EWS_MAX UMETA (DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "HitScan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+	
+	EFT_MAX UMETA(DisplayName = "Default Max")
+};
+
 UCLASS()
 class TACTICALSTRATEGYCPP_API AWeapon : public AActor
 {
@@ -80,6 +90,14 @@ public:
 
 	bool bDestroyWeapon = false;
 
+	UPROPERTY(EditAnywhere)
+	EFireType FireType;	
+
+	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
+	bool bUseScatter;	
+
+	FVector TraceEndWithScatter(const FVector& HitTarget) const;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -105,16 +123,32 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float ZoomedInterpSpeed;
 	
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
+
+	/**
+	 * Number of unprocessed server requests for ammo
+	 * updated in spend round and client update ammo
+	 * client side prediction for ammo
+	 */
+	int32 AmmoSequence = 0; 
+
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
 	
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
-	
-	UFUNCTION()
-	void OnRep_Ammo();
 
 	void SpendRound();
+	
+	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
+	float DistanceToSphere;
+	
+	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
+	float SphereRadius;
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properies")

@@ -85,6 +85,10 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidGame(const FName StateOfMatch, const float WarmUp, const float Match,
 		const float StartingTime, const float Cooldown);
+
+	void CheckPing(float DeltaSeconds);
+	void HighPingWarning();
+	void StopHighPingWarning();
 	
 private:
 	UPROPERTY()
@@ -106,9 +110,19 @@ private:
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
 
-	float HudHealth, HudMaxHealth, HudScore, HudShield, HudMaxShield, HudCarriedAmmo, HudWeaponAmmo;
+	float HudHealth, HudMaxHealth, HudScore, HudShield, HudMaxShield, HudCarriedAmmo, HudWeaponAmmo,
+		HighPingRunningTime = 0, PingAnimationRunningTime = 0;
 	int32 HudDefeats, HudGrenades;
 
 	bool bInitializeHealth = false, bInitializeScore = false, bInitializeDefeats = false, bInitializeGrenades = false,
 		bInitializeShields = false, bInitializeCarriedAmmo = false, bInitializeWeaponAmmo = false;
+
+	UPROPERTY(EditAnywhere)
+	float HighPingDuration = 5;
+	
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 20;
+	
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 50;
 };

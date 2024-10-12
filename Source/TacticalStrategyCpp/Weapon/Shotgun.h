@@ -12,8 +12,10 @@ class TACTICALSTRATEGYCPP_API AShotgun : public AHitScanWeapon
 
 public:
 	AShotgun();
-	
-	virtual void Fire(const FVector& HitTarget) override;
+
+	virtual void FireShotgun(const TArray<FVector_NetQuantize>& HitTargets);
+
+	void ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& HitTargets) const;
 
 protected:
 	virtual void BeginPlay() override;

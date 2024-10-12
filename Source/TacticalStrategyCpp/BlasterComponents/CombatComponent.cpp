@@ -10,6 +10,7 @@
 #include "TacticalStrategyCpp/Hud/BlasterHud.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/Weapon/Projectile.h"
+#include "TacticalStrategyCpp/Weapon/Shotgun.h"
 #include "TacticalStrategyCpp/Weapon/Weapon.h"
 
 // Sets default values for this component's properties
@@ -111,6 +112,9 @@ void UCombatComponent::SetAiming(const bool bIsAiming)
 	if(Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
 
+	if(Character->IsLocallyControlled())
+		bAimButtonPressed = bIsAiming;
+
 	if(Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming? AimWalkSpeed : BaseWalkSpeed;
@@ -158,15 +162,66 @@ void UCombatComponent::Fire()
 	if(CanFire())
 	{
 		bCanFire = false;
-		Server_Fire(HitTarget);
-
+		
 		if(EquippedWeapon)
 		{
 			CrosshairShootingFactor = 0.75f;
+
+			switch (EquippedWeapon->FireType)
+			{
+			case EFireType::EFT_Projectile:
+				FireProjectileWeapon();
+				break;
+			case EFireType::EFT_HitScan:
+				FireHitScanWeapon();
+				break;
+			case EFireType::EFT_Shotgun:
+				FireShotgun();
+				break;
+			case EFireType::EFT_MAX:
+				break;
+			default: ;
+			}
 		}
 	
 		StartFireTimer();
 	}
+}
+
+void UCombatComponent::FireProjectileWeapon()
+{
+	if(EquippedWeapon && Character)
+	{
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
+		Server_Fire(HitTarget);
+		if(!Character->HasAuthority()) LocalFire(HitTarget);
+	}
+}
+
+void UCombatComponent::FireHitScanWeapon()
+{
+	if(EquippedWeapon && Character)
+	{
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
+		Server_Fire(HitTarget);
+		if(!Character->HasAuthority()) LocalFire(HitTarget);
+	}
+}
+
+void UCombatComponent::FireShotgun()
+{
+	if(AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon); Shotgun && Character)
+	{
+		TArray<FVector_NetQuantize> HitTargets;
+		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
+		if(!Character->HasAuthority()) LocalShotgunFire(HitTargets);
+		ServerShotgunFire(HitTargets);
+	}
+}
+
+void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	MulticastShotgunFire(TraceHitTargets);
 }
 
 void UCombatComponent::FireButtonPressed(const bool bPressed)
@@ -486,22 +541,39 @@ void UCombatComponent::Server_Fire_Implementation(const FVector_NetQuantize& Tra
 
 void UCombatComponent::Multicast_Fire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	if(EquippedWeapon == nullptr) return;
+	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 
-	if(Character && CombatState == ECombatState::ECS_Reloading &&
-		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
-	{		
-		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
-		CombatState = ECombatState::ECS_Unoccupied;
-		return;
-	}
+	LocalFire(TraceHitTarget);
+}
+
+void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget) const
+{
+	if(EquippedWeapon == nullptr) return;
 	
 	if(Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
 		EquippedWeapon->Fire(TraceHitTarget);
 	}
+}
+
+void UCombatComponent::LocalShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	// ReSharper disable once CppTooWideScopeInitStatement
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if(Shotgun == nullptr || Character == nullptr) return;
+	if(CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
+	{
+		Character->PlayFireMontage(bAiming);
+		Shotgun->FireShotgun(TraceHitTargets);
+		CombatState = ECombatState::ECS_Unoccupied;		
+	}		
+}
+
+void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+	LocalShotgunFire(TraceHitTargets);
 }
 
 void UCombatComponent::ServerSetAiming_Implementation(const bool bIsAiming)
@@ -557,6 +629,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::SwapWeapons()
 {
+	if(CombatState != ECombatState::ECS_Unoccupied) return;
+	
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;
@@ -621,7 +695,7 @@ void UCombatComponent::UpdateAmmoValues()
 	if(Controller)
 		Controller->SetHudCarriedAmmo(CarriedAmmo);
 	
-	EquippedWeapon->AddAmmo(-ReloadAmount);
+	EquippedWeapon->AddAmmo(ReloadAmount);
 }
 
 void UCombatComponent::UpdateShotgunAmmoValues()
@@ -636,7 +710,7 @@ void UCombatComponent::UpdateShotgunAmmoValues()
 	if(Controller)
 		Controller->SetHudCarriedAmmo(CarriedAmmo);
 	
-	EquippedWeapon->AddAmmo(-1);
+	EquippedWeapon->AddAmmo(1);
 	bCanFire = true;
 	if(EquippedWeapon->IsFull() || CarriedAmmo == 0) // if shotgun is full stop reload animation
 		JumpToShotgunEnd();
@@ -744,6 +818,12 @@ void UCombatComponent::UpdateHudGrenades()
 	{
 		Controller->SetHudGrenades(Grenades);
 	}
+}
+
+void UCombatComponent::OnRep_Aiming()
+{
+	if(Character && Character->IsLocallyControlled())
+		bAiming = bAimButtonPressed;
 }
 
 void UCombatComponent::Server_ThrowGrenade_Implementation()

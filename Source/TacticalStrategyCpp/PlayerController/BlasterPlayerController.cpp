@@ -12,6 +12,7 @@
 #include "TacticalStrategyCpp/Hud/Announcement.h"
 #include "TacticalStrategyCpp/Hud/BlasterHud.h"
 #include "TacticalStrategyCpp/Hud/CharacterOverlay.h"
+#include "TacticalStrategyCpp/Hud/WifiStrength.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
 ABlasterPlayerController::ABlasterPlayerController():
@@ -340,6 +341,34 @@ void ABlasterPlayerController::Tick(const float DeltaSeconds)
 	SetHudTime();
 
 	PollInit();
+	
+	CheckPing(DeltaSeconds);
+}
+
+
+void ABlasterPlayerController::CheckPing(float DeltaSeconds)
+{	
+	HighPingRunningTime += DeltaSeconds;
+	if(HighPingRunningTime >= CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? TObjectPtr<APlayerState>(GetPlayerState<APlayerState>()) : PlayerState;
+		if(PlayerState)
+		{
+			if(PlayerState->GetPingInMilliseconds() > HighPingThreshold)
+			{
+				PingAnimationRunningTime = 0;
+				HighPingWarning();
+			}
+		}
+		HighPingRunningTime = 0;
+	}
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->HighPingAnimation && 
+		CharacterOverlay->IsAnimationPlaying(CharacterOverlay->HighPingAnimation))
+	{
+		PingAnimationRunningTime += DeltaSeconds;
+		if(PingAnimationRunningTime > HighPingDuration)
+			StopHighPingWarning();
+	}
 }
 
 float ABlasterPlayerController::GetServerTime()
@@ -433,4 +462,25 @@ void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ABlasterPlayerController, MatchState);
+}
+
+void ABlasterPlayerController::HighPingWarning()
+{
+	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->WifiStrength && CharacterOverlay->HighPingAnimation)
+	{
+		CharacterOverlay->WifiStrength->SetVisibility(ESlateVisibility::Visible);
+		CharacterOverlay->PlayAnimation(CharacterOverlay->HighPingAnimation, 0, 0);
+	}
+}
+
+void ABlasterPlayerController::StopHighPingWarning()
+{
+	BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;	
+	if(BlasterHud && CharacterOverlay && CharacterOverlay->WifiStrength && CharacterOverlay->HighPingAnimation)
+	{
+		CharacterOverlay->WifiStrength->SetVisibility(ESlateVisibility::Collapsed);
+		if(CharacterOverlay->IsAnimationPlaying(CharacterOverlay->HighPingAnimation))
+			CharacterOverlay->StopAnimation(CharacterOverlay->HighPingAnimation);
+	}
 }

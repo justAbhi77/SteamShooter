@@ -36,17 +36,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound;
 
-	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget) const;
-
-	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
-	bool bUseScatter;
-	
-	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
-	float DistanceToSphere;
-	
-	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
-	float SphereRadius;
-
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit) const;
 	
 public:

@@ -44,4 +44,10 @@ public:
 	
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* GrenadesText;
+
+	UPROPERTY(meta=(BindWidget))
+	class UWifiStrength* WifiStrength;
+
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	UWidgetAnimation* HighPingAnimation;
 };
