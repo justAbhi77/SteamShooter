@@ -3,6 +3,7 @@
 
 #include "BlasterCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -90,6 +91,35 @@ ABlasterCharacter::ABlasterCharacter():
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AttachedGrenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName(GrenadeSocket));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// hit boxes for server side Rewind
+	// SetupBoxComponent(HeadBox, "HeadBox", HeadBoxBone);
+	
+	SetupBoxComponent(HeadBox, "HeadBox", HeadBoxBone);	
+	SetupBoxComponent(PelvisBox, "PelvisBox", PelvisBoxBone);
+	SetupBoxComponent(Spine_02Box, "Spine_02Box", Spine_02BoxBone);
+	SetupBoxComponent(Spine_03Box, "Spine_03Box", Spine_03BoxBone);
+	SetupBoxComponent(UpperArm_LBox, "UpperArm_LBox", UpperArm_LBoxBone);
+	SetupBoxComponent(UpperArm_RBox, "UpperArm_RBox", UpperArm_RBoxBone);
+	SetupBoxComponent(LowerArm_LBox, "LowerArm_LBox", LowerArm_LBoxBone);
+	SetupBoxComponent(LowerArm_RBox, "LowerArm_RBox", LowerArm_RBoxBone);
+	SetupBoxComponent(Hand_LBox, "Hand_LBox", Hand_LBoxBone);
+	SetupBoxComponent(Hand_RBox, "Hand_RBox", Hand_RBoxBone);
+	SetupBoxComponent(BackPackBox, "BackPackBox", BackPackBoxBone);
+	SetupBoxComponent(BlanketBox, "BlanketBox", BlanketBoxBone);
+	SetupBoxComponent(Thigh_LBox, "Thigh_LBox", Thigh_LBoxBone);
+	SetupBoxComponent(Thigh_RBox, "Thigh_RBox", Thigh_RBoxBone);
+	SetupBoxComponent(Calf_LBox, "Calf_LBox", Calf_LBoxBone);
+	SetupBoxComponent(Calf_RBox, "Calf_RBox", Calf_RBoxBone);
+	SetupBoxComponent(Foot_LBox, "Foot_LBox", Foot_LBoxBone);
+	SetupBoxComponent(Foot_RBox, "Foot_RBox", Foot_RBoxBone);	
+}
+
+void ABlasterCharacter::SetupBoxComponent(UBoxComponent*& CompToSetup, const FString& Name, const FString& BoneToAttachTo)
+{
+	CompToSetup = CreateDefaultSubobject<UBoxComponent>(FName(Name));
+	CompToSetup->SetupAttachment(GetMesh(), FName(BoneToAttachTo));
+	CompToSetup->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
@@ -847,6 +877,13 @@ ECombatState ABlasterCharacter::GetCombatState() const
 	if(Combat == nullptr) return ECombatState::ECS_Max;
 
 	return Combat->CombatState;
+}
+
+bool ABlasterCharacter::IsLocallyReloading() const
+{
+	if(Combat == nullptr) return false;
+
+	return Combat->bLocallyReloading;
 }
 
 void ABlasterCharacter::RotateInPlace(const float DeltaTime)

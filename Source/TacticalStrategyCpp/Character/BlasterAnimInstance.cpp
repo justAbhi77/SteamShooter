@@ -104,6 +104,9 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 	}
 
 	bUseLeftHandIk = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+
+	if(BlasterCharacter->IsLocallyControlled() && BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade)
+		bUseLeftHandIk = !BlasterCharacter->IsLocallyReloading();
 	
 	bUseRightHandIk = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied &&
 		!BlasterCharacter->GetDisableGameplay();

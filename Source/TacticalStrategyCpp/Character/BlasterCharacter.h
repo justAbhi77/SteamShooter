@@ -61,6 +61,114 @@ public:
 	void UpdateHudAmmo();
 
 	void SpawnDefaultWeapon() const;
+	
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	class UBoxComponent* HeadBox;
+
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString HeadBoxBone = "head";
+	
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* PelvisBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString PelvisBoxBone = "pelvis";
+	
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Spine_02Box;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Spine_02BoxBone = "spine_02";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Spine_03Box;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Spine_03BoxBone = "spine_03";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* UpperArm_LBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString UpperArm_LBoxBone = "upperarm_l";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* UpperArm_RBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString UpperArm_RBoxBone = "upperarm_r";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* LowerArm_LBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString LowerArm_LBoxBone = "lowerarm_l";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* LowerArm_RBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString LowerArm_RBoxBone = "lowerarm_r";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Hand_LBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Hand_LBoxBone = "hand_l";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Hand_RBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Hand_RBoxBone = "hand_r";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* BackPackBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString BackPackBoxBone = "backpack";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* BlanketBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString BlanketBoxBone = "blanket";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Thigh_LBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Thigh_LBoxBone = "thigh_l";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Thigh_RBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Thigh_RBoxBone = "thigh_r";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Calf_LBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Calf_LBoxBone = "calf_l";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Calf_RBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Calf_RBoxBone = "calf_r";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Foot_LBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Foot_LBoxBone = "foot_l";
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UBoxComponent* Foot_RBox;
+	
+	UPROPERTY(EditAnywhere, Category = "ServerRewind")
+	FString Foot_RBoxBone = "foot_r";
 protected:
 	virtual void BeginPlay() override;
 
@@ -120,6 +228,11 @@ protected:
 	void RotateInPlace(float DeltaTime);
 
 	void DropOrDestroyWeapon(class AWeapon* Weapon);
+
+	// hit boxes for server side Rewind
+
+	void SetupBoxComponent(UBoxComponent*& CompToSetup, const FString& Name, const FString& BoneToAttachTo);
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -338,5 +451,7 @@ public:
 
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 
-	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; } 
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+
+	bool IsLocallyReloading() const;
 };

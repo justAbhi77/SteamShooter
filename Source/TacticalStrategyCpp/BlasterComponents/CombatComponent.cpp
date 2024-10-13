@@ -400,7 +400,8 @@ void UCombatComponent::SetHudCrosshairs(const float DeltaTime)
 
 void UCombatComponent::HandleReload() const
 {
-	Character->PlayReloadMontage();
+	if(Character)
+		Character->PlayReloadMontage();
 }
 
 void UCombatComponent::OnRep_CombatState()
@@ -412,9 +413,9 @@ void UCombatComponent::OnRep_CombatState()
 				Fire();
 			break;
 		case ECombatState::ECS_Reloading:
-			HandleReload();
+			if(Character && !Character->IsLocallyControlled()) HandleReload();
 			break;
-	case ECombatState::ECS_ThrowingGrenade:
+		case ECombatState::ECS_ThrowingGrenade:
 			if(Character)
 			{
 				Character->PlayThrowGrenadeMontage();
@@ -454,7 +455,7 @@ void UCombatComponent::Server_Reload_Implementation()
 
 	CombatState = ECombatState::ECS_Reloading;
 
-	HandleReload();
+	if(!Character->IsLocallyControlled()) HandleReload();
 }
 
 void UCombatComponent::InterFov(const float DeltaTime)
@@ -501,6 +502,7 @@ void UCombatComponent::FireTimerFinished()
 bool UCombatComponent::CanFire() const
 {
 	if(EquippedWeapon == nullptr) return false;
+	if(bLocallyReloading) return false;
 	if(!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading &&
 		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
 		return true;
@@ -675,9 +677,12 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::Reload()
 {
-	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull())
+	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull() &&
+		!bLocallyReloading )
 	{
+		bLocallyReloading = true;
 		Server_Reload();
+		HandleReload();
 	}
 }
 
@@ -837,6 +842,7 @@ void UCombatComponent::Server_ThrowGrenade_Implementation()
 void UCombatComponent::FinishReloading()
 { 
 	if(Character == nullptr) return;
+	bLocallyReloading = false;
 	
 	if(Character->HasAuthority())
 	{
