@@ -16,6 +16,7 @@
 #include "TacticalStrategyCpp/TacticalStrategyCpp.h"
 #include "TacticalStrategyCpp/BlasterComponents/BuffComponent.h"
 #include "TacticalStrategyCpp/BlasterComponents/CombatComponent.h"
+#include "TacticalStrategyCpp/BlasterComponents/LagCompensationComponent.h"
 #include "TacticalStrategyCpp/GameMode/BlasterGameMode.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
@@ -64,6 +65,8 @@ ABlasterCharacter::ABlasterCharacter():
 
 	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
 	Buff->SetIsReplicated(true);
+
+	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensationComp"));
 
 	DissolveTimeLine = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComp"));
 
@@ -309,6 +312,12 @@ void ABlasterCharacter::PostInitializeComponents()
 		Buff->SetInitialSpeed(GetCharacterMovement()->MaxWalkSpeed,
 			GetCharacterMovement()->MaxWalkSpeedCrouched);
 		Buff->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
+	}
+	if(LagCompensation)
+	{
+		LagCompensation->Character = this;
+		if(Controller)
+			LagCompensation->Controller = Cast<ABlasterPlayerController>(Controller);
 	}
 }
 
