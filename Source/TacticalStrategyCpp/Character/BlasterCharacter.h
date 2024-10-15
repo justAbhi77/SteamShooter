@@ -132,7 +132,7 @@ public:
 	UBoxComponent* BlanketBox;
 	
 	UPROPERTY(EditAnywhere, Category = "ServerRewind")
-	FString BlanketBoxBone = "blanket";
+	FString BlanketBoxBone = "blanket_l";
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UBoxComponent* Thigh_LBox;
