@@ -168,10 +168,7 @@ void AWeapon::OnRep_WeaponState() const
 		break;
 	case EWeaponState::EWS_Equipped:
 		ShowPickupWidget(false);
-		if(HasAuthority())
-		{
-			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -185,10 +182,7 @@ void AWeapon::OnRep_WeaponState() const
 		break;
 	case EWeaponState::EWS_EquippedSecondary:		
 		ShowPickupWidget(false);
-		if(HasAuthority())
-		{
-			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);

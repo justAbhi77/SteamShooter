@@ -169,6 +169,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "ServerRewind")
 	FString Foot_RBoxBone = "foot_r";
+
+	UPROPERTY()
+	TMap<FName, UBoxComponent*> HitCollisionBoxes;
 protected:
 	virtual void BeginPlay() override;
 

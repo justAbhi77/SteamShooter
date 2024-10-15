@@ -122,6 +122,7 @@ void ABlasterCharacter::SetupBoxComponent(UBoxComponent*& CompToSetup, const FSt
 	CompToSetup = CreateDefaultSubobject<UBoxComponent>(FName(Name));
 	CompToSetup->SetupAttachment(GetMesh(), FName(BoneToAttachTo));
 	CompToSetup->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitCollisionBoxes.Add(FName(BoneToAttachTo), CompToSetup);
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
