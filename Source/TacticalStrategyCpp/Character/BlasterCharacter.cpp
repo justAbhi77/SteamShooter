@@ -93,7 +93,6 @@ ABlasterCharacter::ABlasterCharacter():
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// hit boxes for server side Rewind
-	// SetupBoxComponent(HeadBox, "HeadBox", HeadBoxBone);
 	
 	SetupBoxComponent(HeadBox, "HeadBox", HeadBoxBone);	
 	SetupBoxComponent(PelvisBox, "PelvisBox", PelvisBoxBone);
@@ -456,7 +455,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	if(Shield > 0)
 	{
 		if(Shield >= Damage)
-		{
+		{	
 			Shield = FMath::Clamp(Shield - Damage, 0, MaxShield);
 			DamageToHealth = 0;
 		}
