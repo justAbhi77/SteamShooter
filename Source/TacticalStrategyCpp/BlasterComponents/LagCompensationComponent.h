@@ -33,6 +33,18 @@ struct FFramePackage
 	TMap<FName, FBoxInformation> HitBoxInfo;
 };
 
+USTRUCT()
+struct FServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool bHitConfirmed;
+
+	UPROPERTY()
+	bool bHeadshot;
+};
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TACTICALSTRATEGYCPP_API ULagCompensationComponent : public UActorComponent
 {
@@ -43,19 +55,38 @@ public:
 
 	friend class ABlasterCharacter;
 
-	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
+	void ShowFramePackage(const FFramePackage& Package, const FColor& Color) const;
+
+	FServerSideRewindResult ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
+	                      const FVector_NetQuantize& HitLocation, float HitTime);
 
 protected:
 	virtual void BeginPlay() override;
 
 	void SaveFramePackage(FFramePackage& Package);
 
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+
+	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize& HitLocation);
+
+	void CacheBoxPosition(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
+
+	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
+	void ResetBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
+
+	void EnableCharacterMeshCollision(const ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
 private:
 	UPROPERTY()
 	ABlasterCharacter* Character;
 
 	UPROPERTY()
 	class ABlasterPlayerController* Controller;
+
+	TDoubleLinkedList<FFramePackage> FrameHistory;
+
+	UPROPERTY(EditAnywhere)
+	float MaxRecordTime = 4;
 
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
