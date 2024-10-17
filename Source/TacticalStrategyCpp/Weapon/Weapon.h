@@ -148,7 +148,19 @@ protected:
 	float DistanceToSphere;
 	
 	UPROPERTY(EditAnywhere, Category="Weapon Scatter")
-	float SphereRadius;
+	float SphereRadius;	
+
+	UPROPERTY(EditAnywhere)
+	float Damage;
+
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewind = false;	
+
+	UPROPERTY()
+	class ABlasterCharacter* BlasterOwnerCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterOwnerController;
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properies")
@@ -181,12 +193,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	FString AmmoEjectFlashSocketName;
 
-	UPROPERTY()
-	class ABlasterCharacter* BlasterOwnerCharacter;
-
-	UPROPERTY()
-	class ABlasterPlayerController* BlasterOwnerController;
-
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
@@ -208,6 +214,8 @@ public:
 
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	
-	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; } 
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+
+	FORCEINLINE float GetDamage() const { return Damage; }
 	
 };

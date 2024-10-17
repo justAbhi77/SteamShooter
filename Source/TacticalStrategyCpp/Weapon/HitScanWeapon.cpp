@@ -4,13 +4,16 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
+#include "TacticalStrategyCpp/BlasterComponents/LagCompensationComponent.h"
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
+#include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 
 AHitScanWeapon::AHitScanWeapon():
-	Damage(20), ImpactParticles(nullptr), BeamParticles(nullptr), MuzzleFlash(nullptr), FireSound(nullptr),
+	ImpactParticles(nullptr), BeamParticles(nullptr), MuzzleFlash(nullptr), FireSound(nullptr),
 	HitSound(nullptr)
 {
 	PrimaryActorTick.bCanEverTick = true;
+	Damage = 20;
 }
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
@@ -36,10 +39,21 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		UWorld* World = GetWorld();		
 		// ReSharper disable once CppTooWideScopeInitStatement
 		ABlasterCharacter* Character = Cast<ABlasterCharacter>(FireHit.GetActor());
-		if(Character && InstigatorController && HasAuthority())
+		if(Character && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(Character, Damage, InstigatorController,
-					this, UDamageType::StaticClass());
+			if(HasAuthority() && !bUseServerSideRewind)
+				UGameplayStatics::ApplyDamage(Character, Damage, InstigatorController,
+						this, UDamageType::StaticClass());
+			if(!HasAuthority() && bUseServerSideRewind)
+			{
+				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ?
+					Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
+				BlasterOwnerController = BlasterOwnerController == nullptr ?
+					Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
+				if(BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensation())
+					BlasterOwnerCharacter->GetLagCompensation()->ServerScoreRequest(Character, Start, HitTarget,
+						BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime, this);
+			}
 		}
 
 		if(FireHit.bBlockingHit && ImpactParticles)

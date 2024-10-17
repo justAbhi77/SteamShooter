@@ -17,9 +17,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere)
-	float Damage;
 	
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ImpactParticles;
