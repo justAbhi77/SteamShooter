@@ -48,6 +48,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
+	UFUNCTION(BlueprintCallable)
+	void FinishSwap();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishSwapAttachWeapons();
+
 	void FireButtonPressed(bool bPressed);
 
 	UFUNCTION(BlueprintCallable)
@@ -87,11 +93,11 @@ protected:
 	void FireHitScanWeapon();
 	void FireShotgun();
 
-	UFUNCTION(Server, Reliable)
-	void Server_Fire(const FVector_NetQuantize& TraceHitTarget);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Fire(const FVector_NetQuantize& TraceHitTarget, float FireDelay);
 
-	UFUNCTION(Server, Reliable)
-	void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Fire(const FVector_NetQuantize& TraceHitTarget);

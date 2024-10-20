@@ -153,7 +153,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float Damage;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Replicated)
 	bool bUseServerSideRewind = false;	
 
 	UPROPERTY()
@@ -161,6 +161,9 @@ protected:
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterOwnerController;
+
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properies")
@@ -173,7 +176,7 @@ private:
 	EWeaponState WeaponState;	
 	
 	UFUNCTION()
-	void OnRep_WeaponState() const;
+	void OnRep_WeaponState();
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properies")
 	class UWidgetComponent* PickupWidget;

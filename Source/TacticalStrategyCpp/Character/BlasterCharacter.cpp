@@ -121,6 +121,9 @@ void ABlasterCharacter::SetupBoxComponent(UBoxComponent*& CompToSetup, const FSt
 {
 	CompToSetup = CreateDefaultSubobject<UBoxComponent>(FName(Name));
 	CompToSetup->SetupAttachment(GetMesh(), FName(BoneToAttachTo));
+	CompToSetup->SetCollisionObjectType(ECC_HitBox);
+	CompToSetup->SetCollisionResponseToChannels(ECR_Ignore);
+	CompToSetup->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
 	CompToSetup->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HitCollisionBoxes.Add(FName(BoneToAttachTo), CompToSetup);
 }
@@ -389,6 +392,14 @@ void ABlasterCharacter::PlayThrowGrenadeMontage() const
 	}	
 }
 
+void ABlasterCharacter::PlayWeaponSwapMontage() const
+{
+	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); AnimInstance && WeaponSwapMontage)
+	{
+		AnimInstance->Montage_Play(WeaponSwapMontage);
+	}	
+}
+
 void ABlasterCharacter::PlayHitReactMontage() const
 {
 	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
@@ -542,7 +553,14 @@ void ABlasterCharacter::EquipButtonPressed()
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
-		ServerEquipButtonPressed();
+		if(Combat->CombatState == ECombatState::ECS_Unoccupied) ServerEquipButtonPressed();
+		if(Combat->ShouldSwapWeapons() && !HasAuthority() && Combat->CombatState == ECombatState::ECS_Unoccupied &&
+			OverlappingWeapon == nullptr)
+		{
+			Combat->CombatState = ECombatState::ECS_SwappingWeapons;
+			PlayWeaponSwapMontage();
+			bFinishedSwapping = false;
+		}
 	}
 }
 

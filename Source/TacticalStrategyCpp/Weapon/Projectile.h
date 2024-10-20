@@ -18,6 +18,17 @@ public:
 
 	virtual void Destroyed() override;
 
+	bool bUseServerSideRewind = false;
+
+	FVector_NetQuantize TraceStart;
+
+	FVector_NetQuantize100 InitializeVelocity;
+
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 15000;	
+
+	float Damage;
+
 protected:
 	
 	UPROPERTY(EditAnywhere)
@@ -28,9 +39,6 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse, const FHitResult& Hit);
-
-	UPROPERTY(EditAnywhere)
-	float Damage;
 	
 	void DestroyedCosmetics() const;
 	

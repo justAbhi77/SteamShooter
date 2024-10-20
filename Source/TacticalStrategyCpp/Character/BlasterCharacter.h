@@ -33,6 +33,8 @@ public:
 	void PlayElimMontage() const;
 
 	void PlayThrowGrenadeMontage() const;
+	
+	void PlayWeaponSwapMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
 
@@ -172,6 +174,8 @@ public:
 
 	UPROPERTY()
 	TMap<FName, UBoxComponent*> HitCollisionBoxes;
+
+	bool bFinishedSwapping = false;
 protected:
 	virtual void BeginPlay() override;
 
@@ -289,6 +293,9 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ThrowGrenadeMontage;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* WeaponSwapMontage;
 
 	void SetAimingSharpness(bool bIsAiming) const;
 

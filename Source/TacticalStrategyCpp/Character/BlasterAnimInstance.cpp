@@ -102,10 +102,11 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 		// DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), BlasterCharacter->GetHitTarget(), FColor::Orange);
 		}
 	}
-
+ 
 	bUseLeftHandIk = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
 
-	if(BlasterCharacter->IsLocallyControlled() && BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade)
+	if(BlasterCharacter->IsLocallyControlled() && BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade
+		&& BlasterCharacter->bFinishedSwapping)
 		bUseLeftHandIk = !BlasterCharacter->IsLocallyReloading();
 	
 	bUseRightHandIk = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied &&
