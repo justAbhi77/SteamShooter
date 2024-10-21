@@ -4,7 +4,6 @@
 #include "ProjectileWeapon.h"
 #include "Projectile.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Kismet/GameplayStatics.h"
 
 
 AProjectileWeapon::AProjectileWeapon()
@@ -44,7 +43,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		SpawnParams.Owner = GetOwner();
 		SpawnParams.Instigator = InstigatorPawn;
 
-		AProjectile* SpawnedProjectile = nullptr;
+		AProjectile* SpawnedProjectile;
 		if(bUseServerSideRewind)
 		{
 			if(InstigatorPawn->HasAuthority())

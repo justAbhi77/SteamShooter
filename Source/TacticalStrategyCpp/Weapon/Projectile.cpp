@@ -61,7 +61,11 @@ void AProjectile::BeginPlay()
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
-{	
+{
+	if(GEngine && Hit.GetActor() && Hit.Component.IsValid())
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red,
+			FString::Printf(TEXT("Bullet Hit %s Component of %s Actor"),
+				*Hit.Component->GetName(), *Hit.GetActor()->GetName()));
 	Destroy();
 }
 

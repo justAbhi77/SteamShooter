@@ -46,11 +46,12 @@ void AProjectileBullet::BeginPlay()
 	PathParams.DrawDebugTime = 5;
 	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
 	PathParams.LaunchVelocity = GetActorForwardVector() * InitialSpeed;
-	PathParams.MaxSimTime = 4;
+	PathParams.MaxSimTime = 3;
 	PathParams.ProjectileRadius = 5.f;
 	PathParams.StartLocation = GetActorLocation();
 	PathParams.TraceChannel = ECC_Visibility;
 	PathParams.ActorsToIgnore.Add(this);
+	PathParams.ActorsToIgnore.Add(GetOwner());
 		
 	FPredictProjectilePathResult PathResult;
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
