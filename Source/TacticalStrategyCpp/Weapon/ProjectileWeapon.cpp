@@ -96,13 +96,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 				SpawnedProjectile->bUseServerSideRewind = false;
 				SpawnedProjectile->Damage = Damage;
 			}
-		}
-		
-		if(ProjectileClass && InstigatorPawn)
-		{
-			World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(),
-				TargetRotation, SpawnParams);
-		}
+		}		
 	}
 }
 
