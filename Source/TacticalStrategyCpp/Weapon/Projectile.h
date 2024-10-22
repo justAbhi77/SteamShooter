@@ -40,7 +40,7 @@ protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse, const FHitResult& Hit);
 	
-	void DestroyedCosmetics() const;
+	void DestroyedCosmetics();
 	
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
@@ -95,5 +95,7 @@ private:
 	class USoundCue* ImpactSound;
 
 	void DestroyAfterTime();
+
+	bool bHasBeenDestroyed = false;
 public:
 };
