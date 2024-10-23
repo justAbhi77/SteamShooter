@@ -24,8 +24,14 @@ void UReturnToMainMenu::MenuSetup()
 		}
 	}
 	
-	if(ReturnButton)
+	if(ReturnButton && !ReturnButton->OnClicked.IsBound())
 		ReturnButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
+
+	if(BackButton && !BackButton->OnClicked.IsBound())
+	{
+		BackButton->SetIsEnabled(true);
+		BackButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::BackButtonClicked);
+	}
 
 	if(UGameInstance* GameInstance = GetGameInstance())
 	{
@@ -38,7 +44,7 @@ void UReturnToMainMenu::MenuSetup()
 
 void UReturnToMainMenu::MenuTearDown()
 {
-	RemoveFromParent();
+	RemoveFromParent();	
 
 	if(UWorld* World = GetWorld())
 	{
@@ -50,6 +56,18 @@ void UReturnToMainMenu::MenuTearDown()
 			PlayerController->SetShowMouseCursor(false);
 		}
 	}
+	if(ReturnButton && ReturnButton->OnClicked.IsBound())
+		ReturnButton->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
+
+	if(BackButton && BackButton->OnClicked.IsBound())
+	{
+		BackButton->SetIsEnabled(true);
+		BackButton->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::BackButtonClicked);
+	}
+	
+	if(MultiplayerSessionSubsystem && MultiplayerSessionSubsystem->MultiplayerOnDestroySessionComplete.IsBound())
+		MultiplayerSessionSubsystem->MultiplayerOnDestroySessionComplete.RemoveDynamic(this,
+			&UReturnToMainMenu::OnDestroySession);
 }
 
 bool UReturnToMainMenu::Initialize()
@@ -83,10 +101,18 @@ void UReturnToMainMenu::OnDestroySession(bool bWasSuccessful)
 	}
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UReturnToMainMenu::ReturnButtonClicked()
 {
 	ReturnButton->SetIsEnabled(false);
 	
 	if(MultiplayerSessionSubsystem)
 		MultiplayerSessionSubsystem->DestroySession();
+}
+
+void UReturnToMainMenu::BackButtonClicked()
+{
+	BackButton->SetIsEnabled(false);
+	OnMenuTornDown.Execute();
+	MenuTearDown();
 }

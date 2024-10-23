@@ -12,6 +12,7 @@
 #include "TacticalStrategyCpp/Hud/Announcement.h"
 #include "TacticalStrategyCpp/Hud/BlasterHud.h"
 #include "TacticalStrategyCpp/Hud/CharacterOverlay.h"
+#include "TacticalStrategyCpp/Hud/ReturnToMainMenu.h"
 #include "TacticalStrategyCpp/Hud/WifiStrength.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
@@ -29,8 +30,16 @@ ABlasterPlayerController::ABlasterPlayerController():
 	HudHealth(0),
 	HudMaxHealth(0),
 	HudScore(0), HudShield(0), HudMaxShield(0), HudCarriedAmmo(0), HudWeaponAmmo(0),
-	HudDefeats(0), HudGrenades(0)
+	HudDefeats(0), HudGrenades(0), WbpReturnToMenu(nullptr)
 {
+}
+
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	if(InputComponent == nullptr) return;
+	
+	InputComponent->BindAction("Quit", IE_Pressed, this, &ABlasterPlayerController::ShowReturnToMenu);
 }
 
 void ABlasterPlayerController::BeginPlay()
@@ -491,5 +500,26 @@ void ABlasterPlayerController::StopHighPingWarning()
 		CharacterOverlay->WifiStrength->SetVisibility(ESlateVisibility::Collapsed);
 		if(CharacterOverlay->IsAnimationPlaying(CharacterOverlay->HighPingAnimation))
 			CharacterOverlay->StopAnimation(CharacterOverlay->HighPingAnimation);
+	}
+}
+
+void ABlasterPlayerController::ShowReturnToMenu()
+{
+	if(WReturnToMenu == nullptr) return;
+	if(WbpReturnToMenu == nullptr)
+	{
+		WbpReturnToMenu = CreateWidget<UReturnToMainMenu>(this, WReturnToMenu);
+		WbpReturnToMenu->OnMenuTornDown.BindLambda([this]()
+		{
+			bReturnToMenuOpen = !bReturnToMenuOpen;
+		});
+	}
+	if(WbpReturnToMenu)
+	{
+		bReturnToMenuOpen = !bReturnToMenuOpen;
+		if(bReturnToMenuOpen)
+			WbpReturnToMenu->MenuSetup();
+		else
+			WbpReturnToMenu->MenuTearDown();
 	}
 }

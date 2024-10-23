@@ -59,6 +59,8 @@ public:
 protected:	
 	virtual void BeginPlay() override;
 
+	virtual void SetupInputComponent() override;
+
 	void SetHudTime();
 
 	// Time Syncing between Server and clients
@@ -95,6 +97,8 @@ protected:
 	void CheckPing(float DeltaSeconds);
 	void HighPingWarning();
 	void StopHighPingWarning();
+
+	void ShowReturnToMenu();
 	
 private:
 	UPROPERTY()
@@ -134,4 +138,12 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold = 50;
+
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	TSubclassOf<class UUserWidget> WReturnToMenu;
+
+	UPROPERTY()
+	class UReturnToMainMenu* WbpReturnToMenu;
+
+	bool bReturnToMenuOpen = false;
 };

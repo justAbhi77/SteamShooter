@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "ReturnToMainMenu.generated.h"
 
+DECLARE_DELEGATE(FMenuTornDown)
+
 /**
  * 
  */
@@ -19,6 +21,8 @@ public:
 
 	void MenuTearDown();
 
+	FMenuTornDown OnMenuTornDown;
+
 protected:
 	virtual bool Initialize() override;
 
@@ -28,9 +32,15 @@ protected:
 private:
 	UPROPERTY(meta=(BindWidget))
 	class UButton* ReturnButton;
+	
+	UPROPERTY(meta=(BindWidget))
+	UButton* BackButton;
 
 	UFUNCTION()
 	void ReturnButtonClicked();
+	
+	UFUNCTION()
+	void BackButtonClicked();
 
 	UPROPERTY()
 	class APlayerController* PlayerController;
