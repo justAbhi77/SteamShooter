@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "TacticalStrategyCpp/Enums/Team.h"
 #include "BlasterPlayerState.generated.h"
 
 /**
@@ -35,4 +36,11 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
 	int32 Defeats;
+
+	UPROPERTY(EditAnywhere, Replicated, meta=(AllowPrivateAccess = "true"))
+	ETeam Team = ETeam::ET_NoTeam;
+
+public:
+	FORCEINLINE ETeam GetTeam() const { return Team; }
+	FORCEINLINE void SetTeam(const ETeam TeamToSet) { Team = TeamToSet; }
 };

@@ -38,6 +38,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		const FVector Start = SocketTransform.GetLocation();
 		
 		TMap<ABlasterCharacter*, uint32> HitMap;
+		TMap<ABlasterCharacter*, uint32> HeadShotHitMap;
 		for(int i=0; i<HitTargets.Num(); i++)
 		{
 			FHitResult FireHit;
@@ -46,10 +47,16 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			
 			if(ABlasterCharacter* Character = Cast<ABlasterCharacter>(FireHit.GetActor()))
 			{
-				if(HitMap.Contains(Character))
-					HitMap[Character]++;
+				if(FireHit.BoneName.ToString() == Character->HeadBoxBone)
+				{
+					if(HeadShotHitMap.Contains(Character)) HeadShotHitMap[Character]++;
+					else HeadShotHitMap.Emplace(Character, 1);				
+				}
 				else
-					HitMap.Emplace(Character, 1);
+				{
+					if(HitMap.Contains(Character)) HitMap[Character]++;
+					else HitMap.Emplace(Character, 1);
+				}
 			}
 			
 			if(ImpactParticles)
@@ -61,17 +68,32 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		}
 
 		TArray<ABlasterCharacter*> HitCharacters;
+		TMap<ABlasterCharacter*, float> DamageMap;
 		for(auto HitPair : HitMap)
-		{
-			if(HitPair.Key && InstigatorController)
+			if(HitPair.Key)
+			{
+				DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage);
+				HitCharacters.AddUnique(HitPair.Key);
+			}		
+
+		for(auto HeadshotHitPair : HitMap)
+			if(HeadshotHitPair.Key)
+			{
+				if(DamageMap.Contains(HeadshotHitPair.Key)) DamageMap[HeadshotHitPair.Key]+= HeadshotHitPair.Value * HeadShotDamage;
+				else DamageMap.Emplace(HeadshotHitPair.Key, HeadshotHitPair.Value * HeadShotDamage);
+				HitCharacters.AddUnique(HeadshotHitPair.Key);
+			}
+
+		for(auto DamagePair : DamageMap)
+			if(DamagePair.Key && InstigatorController)
 			{
 				const bool bCauseServerDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 				if(HasAuthority() && bCauseServerDamage)
-					UGameplayStatics::ApplyDamage(HitPair.Key, Damage * HitPair.Value,
-						InstigatorController, this, UDamageType::StaticClass());
-				HitCharacters.Add(HitPair.Key);
+					UGameplayStatics::ApplyDamage(DamagePair.Key, Damage * DamagePair.Value,
+						InstigatorController, this, UDamageType::StaticClass());			
 			}
-		}
+
+		
 		if(!HasAuthority() && bUseServerSideRewind)
 		{					
 			BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ?

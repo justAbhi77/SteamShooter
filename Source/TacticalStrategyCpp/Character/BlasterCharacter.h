@@ -10,6 +10,8 @@
 #include "TacticalStrategyCpp/Interfaces/InteractWithCrosshairsInterface.h"
 #include "BlasterCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+
 UCLASS()
 class TACTICALSTRATEGYCPP_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
@@ -38,10 +40,10 @@ public:
 
 	virtual void OnRep_ReplicatedMovement() override;
 
-	void Elim();
+	void Elim(bool bPlayerLeftGame);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Elim();
+	void Multicast_Elim(bool bPlayerLeftGame);
 
 	virtual void Destroyed() override;
 
@@ -176,6 +178,17 @@ public:
 	TMap<FName, UBoxComponent*> HitCollisionBoxes;
 
 	bool bFinishedSwapping = false;
+
+	FOnLeftGame OnLeftGame;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_GainedLead();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_LostLead();
+	
+	UFUNCTION(Server, Reliable)
+	void Server_LeaveGame();
 protected:
 	virtual void BeginPlay() override;
 
@@ -266,7 +279,7 @@ private:
 	class ULagCompensationComponent* LagCompensation;
 
 	UFUNCTION(Server, Reliable)
-	void ServerEquipButtonPressed();
+	void Server_EquipButtonPressed();
 
 	UPROPERTY(EditAnywhere)
 	bool bIsCrouchButtonToggle;
@@ -339,6 +352,8 @@ private:
 	
 	void ElimTimerFinished();
 
+	bool bLeftGame = false;
+
 	UPROPERTY(VisibleAnywhere)
 	UTimelineComponent* DissolveTimeLine; // timeline cpp declaration
 	
@@ -393,6 +408,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* CrownSystem;
+
+	UPROPERTY()
+	class UNiagaraComponent* CrownComponent;
 
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
 	UStaticMeshComponent* AttachedGrenade;

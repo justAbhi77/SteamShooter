@@ -3,7 +3,11 @@
 #include "BlasterHud.h"
 #include "Announcement.h"
 #include "CharacterOverlay.h"
+#include "ElimAnnouncement.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/HorizontalBox.h"
 
 void ABlasterHud::DrawHUD()
 {
@@ -57,6 +61,39 @@ void ABlasterHud::AddAnnouncement()
 	}	
 }
 
+void ABlasterHud::AddElimAnnouncement(const FString& AttackerName, const FString& VictimName)
+{
+	OwningPlayer = OwningPlayer == nullptr ? GetOwningPlayerController() : OwningPlayer;
+	if(OwningPlayer && ELimAnnouncementClass)
+	{
+		if(UElimAnnouncement* ElimAnnouncementWidget = CreateWidget<UElimAnnouncement>(OwningPlayer, ELimAnnouncementClass))
+		{
+			ElimAnnouncementWidget->SetElimAnnouncementText(AttackerName, VictimName);
+			ElimAnnouncementWidget->AddToViewport();
+
+			for(auto Msg : ElimMessages)
+			{
+				if(Msg && Msg->AnnouncementBox)
+				{
+					if(UCanvasPanelSlot* CanvasSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(Msg->AnnouncementBox))
+					{
+						const FVector2D Position = CanvasSlot->GetPosition();
+						const FVector2D NewPosition{ CanvasSlot->GetPosition().X, Position.Y - CanvasSlot->GetSize().Y};
+						CanvasSlot->SetPosition(NewPosition);
+					}
+				}
+			}
+			ElimMessages.Add(ElimAnnouncementWidget);
+
+			FTimerHandle ElimMsgTimer;
+			FTimerDelegate ElimMsgDelegate;
+			ElimMsgDelegate.BindUFunction(this, FName("ElimAnnouncementTimerFinished"),
+				ElimAnnouncementWidget);
+			GetWorldTimerManager().SetTimer(ElimMsgTimer, ElimMsgDelegate, ElimAnnouncementTime, false);
+		}
+	}
+}
+
 void ABlasterHud::BeginPlay()
 {
 	Super::BeginPlay();
@@ -85,4 +122,10 @@ void ABlasterHud::DrawCrosshair(UTexture2D* Texture, const FVector2D& ViewportCe
 
 	DrawTexture(Texture, TextureDrawPoint.X, TextureDrawPoint.Y, TextureWidth, TextureHeight,
 		0.f, 0.f, 1.f, 1.f, CrosshairColor);
+}
+
+void ABlasterHud::ElimAnnouncementTimerFinished(UElimAnnouncement* MsgToRemove)
+{
+	if(MsgToRemove)
+		MsgToRemove->RemoveFromParent();
 }

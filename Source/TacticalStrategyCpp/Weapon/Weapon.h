@@ -151,7 +151,10 @@ protected:
 	float SphereRadius;	
 
 	UPROPERTY(EditAnywhere)
-	float Damage;
+	float Damage = 20;
+	
+	UPROPERTY(EditAnywhere)
+	float HeadShotDamage = 40;
 
 	UPROPERTY(EditAnywhere, Replicated)
 	bool bUseServerSideRewind = false;	
@@ -220,5 +223,6 @@ public:
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 
 	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetHeadshotDamage() const { return HeadShotDamage; }
 	
 };

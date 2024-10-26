@@ -48,15 +48,20 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	{
 		if(ABlasterPlayerController* OwnerController = Cast<ABlasterPlayerController>(OwnerCharacter->Controller))
 		{
+			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
 			if(OwnerCharacter->HasAuthority() && !bUseServerSideRewind)
 			{
-				UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController, this,
+				float DamageToCause = Damage;
+
+				if(HitCharacter)
+					DamageToCause = Hit.BoneName.ToString() == HitCharacter->HeadBoxBone ? HeadShotDamage : Damage;
+				
+				UGameplayStatics::ApplyDamage(OtherActor, DamageToCause, OwnerController, this,
 					UDamageType::StaticClass());
 				
 				Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 				return;
 			}
-			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
 			if(HitCharacter && bUseServerSideRewind && OwnerCharacter->GetLagCompensation() &&
 				OwnerCharacter->IsLocallyControlled())
 			{

@@ -5,6 +5,7 @@
 #include "MultiplayerSessionSubsystem.h"
 #include "Components/Button.h"
 #include "GameFramework/GameModeBase.h"
+#include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 
 void UReturnToMainMenu::MenuSetup()
 {
@@ -101,13 +102,30 @@ void UReturnToMainMenu::OnDestroySession(bool bWasSuccessful)
 	}
 }
 
+void UReturnToMainMenu::OnPlayerLeftGame()
+{	
+	if(MultiplayerSessionSubsystem)
+		MultiplayerSessionSubsystem->DestroySession();
+}
+
 // ReSharper disable once CppMemberFunctionMayBeConst
 void UReturnToMainMenu::ReturnButtonClicked()
 {
 	ReturnButton->SetIsEnabled(false);
-	
-	if(MultiplayerSessionSubsystem)
-		MultiplayerSessionSubsystem->DestroySession();
+
+	if(UWorld* World = GetWorld())
+	{
+		if(APlayerController* FirstPlayerController = World->GetFirstPlayerController())
+		{
+			if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FirstPlayerController->GetPawn()))
+			{
+				BlasterCharacter->OnLeftGame.AddDynamic(this, &UReturnToMainMenu::OnPlayerLeftGame);
+				BlasterCharacter->Server_LeaveGame();
+			}
+			else
+				ReturnButton->SetIsEnabled(true);
+		}
+	}
 }
 
 void UReturnToMainMenu::BackButtonClicked()

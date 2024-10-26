@@ -55,6 +55,8 @@ public:
 	float SingleTripTime = 0;
 
 	FHighPingDelegate HighPingDelegate;
+
+	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
 	
 protected:	
 	virtual void BeginPlay() override;
@@ -99,6 +101,9 @@ protected:
 	void StopHighPingWarning();
 
 	void ShowReturnToMenu();
+
+	UFUNCTION(Client, Reliable)
+	void Client_ElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 	
 private:
 	UPROPERTY()

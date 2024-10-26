@@ -27,7 +27,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000;	
 
-	float Damage;
+	UPROPERTY(EditAnywhere)
+	float Damage = 20;
+	
+	UPROPERTY(EditAnywhere)
+	float HeadShotDamage = 40;
 
 protected:
 	

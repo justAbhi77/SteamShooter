@@ -2,6 +2,8 @@
 
 
 #include "BlasterCharacter.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -19,6 +21,7 @@
 #include "TacticalStrategyCpp/BlasterComponents/LagCompensationComponent.h"
 #include "TacticalStrategyCpp/GameMode/BlasterGameMode.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
+#include "TacticalStrategyCpp/GameState/BlasterGameState.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 #include "TacticalStrategyCpp/Weapon/Weapon.h"
 
@@ -147,7 +150,7 @@ void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 		Weapon->Dropped();
 }
 
-void ABlasterCharacter::Elim()
+void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
 	if(Combat)
 	{
@@ -160,12 +163,12 @@ void ABlasterCharacter::Elim()
 			DropOrDestroyWeapon(Combat->SecondaryWeapon);
 		}
 	}
-	Multicast_Elim();
-	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
+	Multicast_Elim(bPlayerLeftGame);
 }
 
-void ABlasterCharacter::Multicast_Elim_Implementation()
+void ABlasterCharacter::Multicast_Elim_Implementation(bool bPlayerLeftGame)
 {
+	bLeftGame = bPlayerLeftGame;
 	if(BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHudWeaponAmmo(0);
@@ -218,6 +221,11 @@ void ABlasterCharacter::Multicast_Elim_Implementation()
 	if(IsLocallyControlled() && Combat && Combat->bAiming &&  Combat->EquippedWeapon &&
 		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 		ShowSniperScopeWidget(false);
+
+	if(CrownComponent)
+		CrownComponent->DestroyComponent();
+	
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 }
 
 void ABlasterCharacter::Destroyed()
@@ -249,6 +257,29 @@ void ABlasterCharacter::SpawnDefaultWeapon() const
 		StartingWeapon->bDestroyWeapon = true;
 		if(Combat)
 			Combat->EquipWeapon(StartingWeapon);
+	}
+}
+
+void ABlasterCharacter::Multicast_GainedLead_Implementation()
+{
+	if(CrownSystem == nullptr) return;
+
+	if(CrownComponent == nullptr)
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(),
+			GetActorLocation() + FVector(0.f,0.f, 110.f), GetActorRotation(),
+			EAttachLocation::KeepWorldPosition, false);
+
+	if(CrownComponent)
+	{
+		CrownComponent->Activate();
+	}
+}
+
+void ABlasterCharacter::Multicast_LostLead_Implementation()
+{
+	if(CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
 	}
 }
 
@@ -509,7 +540,12 @@ void ABlasterCharacter::PollInit()
 		if(BlasterPlayerState)
 		{
 			BlasterPlayerState->AddToScore(0, true);
-			BlasterPlayerState->AddToDefeats(0, true);
+			BlasterPlayerState->AddToDefeats(0, true);		
+
+			ABlasterGameState* BlasterGameState =
+				Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+			if(BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
+				Multicast_GainedLead();
 		}
 	}
 }
@@ -553,7 +589,7 @@ void ABlasterCharacter::EquipButtonPressed()
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
-		if(Combat->CombatState == ECombatState::ECS_Unoccupied) ServerEquipButtonPressed();
+		if(Combat->CombatState == ECombatState::ECS_Unoccupied) Server_EquipButtonPressed();
 		if(Combat->ShouldSwapWeapons() && !HasAuthority() && Combat->CombatState == ECombatState::ECS_Unoccupied &&
 			OverlappingWeapon == nullptr)
 		{
@@ -762,7 +798,7 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(const AWeapon* LastWeapon) const
 	}
 }
 
-void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
+void ABlasterCharacter::Server_EquipButtonPressed_Implementation()
 {
 	if(Combat)
 	{
@@ -835,9 +871,24 @@ void ABlasterCharacter::HideCameraOnCharacterClose() const
 
 void ABlasterCharacter::ElimTimerFinished()
 {
-	if(ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	if(BlasterGameMode && !bLeftGame)
 	{
 		BlasterGameMode->RequestRespawn(this, Controller);
+	}
+	if(bLeftGame && IsLocallyControlled())
+	{
+		OnLeftGame.Broadcast();
+	}
+}
+
+void ABlasterCharacter::Server_LeaveGame_Implementation()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if(BlasterGameMode && BlasterPlayerState)
+	{
+		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 	}
 }
 

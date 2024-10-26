@@ -42,6 +42,33 @@ void ABlasterPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Quit", IE_Pressed, this, &ABlasterPlayerController::ShowReturnToMenu);
 }
 
+void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
+{
+	Client_ElimAnnouncement(Attacker, Victim);
+}
+
+void ABlasterPlayerController::Client_ElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
+{
+	APlayerState* Self = GetPlayerState<APlayerState>();
+	if(Self && Attacker && Victim)
+	{		
+		BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
+		if(BlasterHud)
+		{
+			if(Attacker == Self && Victim != Self)
+				BlasterHud->AddElimAnnouncement("You", Victim->GetPlayerName());
+			else if(Victim == Self && Attacker != Self)
+				BlasterHud->AddElimAnnouncement(Attacker->GetPlayerName(), "You");
+			else if(Attacker == Victim && Attacker == Self)
+				BlasterHud->AddElimAnnouncement("You", "Yourself");
+			else if(Attacker == Victim && Attacker != Self)
+				BlasterHud->AddElimAnnouncement(Victim->GetPlayerName(), "themselves");
+			else
+				BlasterHud->AddElimAnnouncement(Attacker->GetPlayerName(),Victim->GetPlayerName());
+		}
+	}
+}
+
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -144,7 +171,7 @@ void ABlasterPlayerController::ServerCheckMatchState_Implementation()
 void ABlasterPlayerController::OnRep_MatchState()
 {
 	if(MatchState == MatchState::InProgress)
-	{		
+	{
 		BlasterHud = BlasterHud == nullptr ? Cast<ABlasterHud>(GetHUD()) : BlasterHud;
 		if(BlasterHud == nullptr) return;
 
