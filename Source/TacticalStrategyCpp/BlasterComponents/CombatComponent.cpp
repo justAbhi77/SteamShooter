@@ -881,7 +881,11 @@ void UCombatComponent::FinishReloading()
 void UCombatComponent::FinishSwap()
 {
 	if(Character && Character->HasAuthority())
+	{
 		CombatState = ECombatState::ECS_Unoccupied;
+		OnRep_EquippedWeapon();
+		OnRep_SecondaryWeapon();
+	}
 	
 	if(Character) Character->bFinishedSwapping = true;
 	
@@ -891,18 +895,11 @@ void UCombatComponent::FinishSwap()
 
 void UCombatComponent::FinishSwapAttachWeapons()
 {
+	PlayEquipWeaponSound(SecondaryWeapon);
+	
 	if(Character == nullptr || !Character->HasAuthority()) return;
 	
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;
-	
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	AttachActorToRightHand(EquippedWeapon);
-	EquippedWeapon->SetHudAmmo();
-	UpdateCarriedAmmo();
-	PlayEquipWeaponSound(EquippedWeapon);
-
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-	AttachActorToBackPack(SecondaryWeapon);
 }

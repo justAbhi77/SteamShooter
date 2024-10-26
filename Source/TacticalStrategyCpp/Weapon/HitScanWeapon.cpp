@@ -97,7 +97,6 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		{
 			End.Normalize();
 			End *= 2500;
-			OutHit.ImpactPoint = End;
 		}
 		if(BeamParticles)
 		{
