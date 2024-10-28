@@ -80,16 +80,16 @@ void ABlasterPlayerController::BeginPlay()
 
 void ABlasterPlayerController::SetHudTime()
 {
-	const double MiliSecondsLeft = MatchTime - GetServerTime();
+	const double MilliSecondsLeft = MatchTime - GetServerTime();
 
 	float TimeLeft = 0;
 
 	if(MatchState == MatchState::WaitingToStart)
 		TimeLeft = WarmUpTime - GetServerTime() + LevelStartingTime;
 	else if(MatchState == MatchState::InProgress)
-		TimeLeft = WarmUpTime + MiliSecondsLeft + LevelStartingTime;
-	else if(MatchState == MatchState::Cooldown)
-		TimeLeft = CooldownTime + WarmUpTime + MiliSecondsLeft + LevelStartingTime;
+		TimeLeft = WarmUpTime + MilliSecondsLeft + LevelStartingTime;
+	else if(MatchState == MatchState::MatchCooldown)
+		TimeLeft = CooldownTime + WarmUpTime + MilliSecondsLeft + LevelStartingTime;
 
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 	if(HasAuthority())
@@ -104,7 +104,7 @@ void ABlasterPlayerController::SetHudTime()
 	}
 	if(CountDownInt != SecondsLeft)
 	{
-		if(MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown)
+		if(MatchState == MatchState::WaitingToStart || MatchState == MatchState::MatchCooldown)
 			SetHudAnnouncementCountDown(TimeLeft);
 		if(MatchState == MatchState::InProgress)
 			SetHudMatchCountDown(TimeLeft);
@@ -181,8 +181,10 @@ void ABlasterPlayerController::OnRep_MatchState()
 			BlasterHud->Announcement->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
-	else if(MatchState == MatchState::Cooldown)
+	else if(MatchState == MatchState::MatchCooldown)
 		HandleCooldown();
+	else if(MatchState == MatchState::WaitingTeamSelection)
+		HandleTeamSelection();
 }
 
 void ABlasterPlayerController::Server_RequestServerTime_Implementation(float TimeOfClientRequest)
@@ -499,6 +501,16 @@ void ABlasterPlayerController::HandleCooldown()
 		}
 		
 		Announcement->InfoText->SetText(FText::FromString(WinnerText));
+	}
+}
+
+void ABlasterPlayerController::HandleTeamSelection()
+{
+	// TODO: Team Selection
+	if(WTeamSelection == nullptr) return;
+	if(WbpTeamSelection == nullptr)
+	{
+		WbpTeamSelection = CreateWidget<UTeamSelection>(this, WTeamSelection);
 	}
 }
 

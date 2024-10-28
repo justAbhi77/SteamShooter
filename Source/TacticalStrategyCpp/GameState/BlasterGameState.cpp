@@ -6,6 +6,8 @@
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
 ABlasterGameState::ABlasterGameState():
+	RedTeamScore(0),
+	BlueTeamScore(0),
 	TopScore(0)
 {
 }

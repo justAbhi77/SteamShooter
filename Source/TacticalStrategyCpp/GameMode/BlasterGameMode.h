@@ -6,7 +6,8 @@
 
 namespace MatchState
 {
-	extern TACTICALSTRATEGYCPP_API const FName Cooldown; // match has ended display winner and start new match
+	extern TACTICALSTRATEGYCPP_API const FName WaitingTeamSelection; // waiting for the player to select a team used in team game mode
+	extern TACTICALSTRATEGYCPP_API const FName MatchCooldown; // match has ended display winner and start new match
 }
 
 /**
@@ -42,10 +43,11 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
+	virtual void AfterWaitingToStart();
 
 	virtual void OnMatchStateSet() override;
 	
-private:
 	float CountDownTime;
 
 public:

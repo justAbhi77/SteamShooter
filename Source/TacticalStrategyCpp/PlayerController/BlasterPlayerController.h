@@ -49,6 +49,8 @@ public:
 	void OnMatchStateSet(FName State);
 
 	void HandleCooldown();
+	
+	void HandleTeamSelection();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -149,6 +151,12 @@ private:
 
 	UPROPERTY()
 	class UReturnToMainMenu* WbpReturnToMenu;
+	
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	TSubclassOf<class UUserWidget> WTeamSelection;
+	
+	UPROPERTY()
+	class UTeamSelection* WbpTeamSelection;
 
 	bool bReturnToMenuOpen = false;
 };

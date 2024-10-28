@@ -21,6 +21,10 @@ ABlasterGameMode::ABlasterGameMode():
 {
 	bDelayedStart = true;
 }
+void ABlasterGameMode::AfterWaitingToStart()
+{
+	StartMatch();
+}
 
 void ABlasterGameMode::Tick(const float DeltaSeconds)
 {
@@ -30,7 +34,7 @@ void ABlasterGameMode::Tick(const float DeltaSeconds)
 	{
 		CountDownTime = WarmUpTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if(CountDownTime <= 0.f)
-			StartMatch();
+			AfterWaitingToStart();
 	}
 	else if(MatchState == MatchState::InProgress)
 	{
