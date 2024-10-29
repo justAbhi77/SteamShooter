@@ -9,7 +9,8 @@
 
 namespace MatchState
 {
-	const FName Cooldown = FName("Cooldown");
+	const FName WaitingTeamSelection = FName("WaitingTeamSelection");
+	const FName MatchInCooldown = FName("MatchInCooldown");
 }
 
 ABlasterGameMode::ABlasterGameMode():
@@ -40,9 +41,9 @@ void ABlasterGameMode::Tick(const float DeltaSeconds)
 	{
 		 CountDownTime = WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if(CountDownTime <= 0.f)
-			SetMatchState(MatchState::Cooldown);
+			SetMatchState(MatchState::MatchInCooldown);
 	}
-	else if (MatchState == MatchState::Cooldown)
+	else if (MatchState == MatchState::MatchInCooldown)
 	{
 		CountDownTime = CooldownTime + WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if(CountDownTime <= 0.f)

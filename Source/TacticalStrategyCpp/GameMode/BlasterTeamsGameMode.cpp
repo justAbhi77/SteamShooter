@@ -6,11 +6,6 @@
 #include "TacticalStrategyCpp/GameState/BlasterGameState.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
-namespace MatchState
-{
-	const FName WaitingTeamSelection = FName("WaitingTeamSelection");
-}
-
 void ABlasterTeamsGameMode::Tick(const float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
