@@ -3,6 +3,8 @@
 
 #include "TeamSelection.h"
 #include "Components/Button.h"
+#include "TacticalStrategyCpp/Enums/Team.h"
+#include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
 void UTeamSelection::MenuSetup()
 {
@@ -23,10 +25,10 @@ void UTeamSelection::MenuSetup()
 	}
 	
 	if(RedTeam && !RedTeam->OnClicked.IsBound())
-		RedTeam->OnClicked.AddDynamic(&UReturnToMainMenu::ReturnButtonClicked);
+		RedTeam->OnClicked.AddDynamic(this, &UTeamSelection::OnRedButtonClicked);
 
 	if(BlueTeam && !BlueTeam->OnClicked.IsBound())
-		BlueTeam->OnClicked.AddDynamic(this, &UReturnToMainMenu::BackButtonClicked);
+		BlueTeam->OnClicked.AddDynamic(this, &UTeamSelection::OnBlueButtonClicked);
 }
 
 void UTeamSelection::MenuTearDown()
@@ -44,13 +46,32 @@ void UTeamSelection::MenuTearDown()
 		}
 	}
 	if(RedTeam && RedTeam->OnClicked.IsBound())
-		RedTeam->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
+		RedTeam->OnClicked.RemoveDynamic(this, &UTeamSelection::OnRedButtonClicked);
 
 	if(BlueTeam && BlueTeam->OnClicked.IsBound())
-		BlueTeam->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::BackButtonClicked);
+		BlueTeam->OnClicked.RemoveDynamic(this, &UTeamSelection::OnBlueButtonClicked);
 }
 
-void UTeamSelection::TeamButtonClicked(ETeam NewTeam)
+void UTeamSelection::TeamButtonClicked(const ETeam NewTeam) const
 {
+	if(RedTeam)
+		RedTeam->SetIsEnabled(false);
+	if(BlueTeam)
+		BlueTeam->SetIsEnabled(false);
+	if(ABlasterPlayerState* BlasterPlayerState = PlayerController->GetPlayerState<ABlasterPlayerState>())
+	{
+		BlasterPlayerState->SetTeam(NewTeam);
+		TeamSelectionChanged.Broadcast(NewTeam);
+	}
+}
+
+void UTeamSelection::OnRedButtonClicked()
+{
+	TeamButtonClicked(ETeam::ET_Red);
+}
+
+void UTeamSelection::OnBlueButtonClicked()
+{
+	TeamButtonClicked(ETeam::ET_Blue);
 }
 

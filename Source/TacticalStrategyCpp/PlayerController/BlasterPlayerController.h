@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "TacticalStrategyCpp/Enums/Team.h"
 #include "BlasterPlayerController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
@@ -106,6 +107,9 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void Client_ElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
+
+	UFUNCTION()
+	void OnTeamSelectionChanged(ETeam NewTeam);
 	
 private:
 	UPROPERTY()

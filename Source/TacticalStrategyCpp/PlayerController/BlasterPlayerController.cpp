@@ -13,6 +13,7 @@
 #include "TacticalStrategyCpp/Hud/BlasterHud.h"
 #include "TacticalStrategyCpp/Hud/CharacterOverlay.h"
 #include "TacticalStrategyCpp/Hud/ReturnToMainMenu.h"
+#include "TacticalStrategyCpp/Hud/TeamSelection.h"
 #include "TacticalStrategyCpp/Hud/WifiStrength.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
@@ -30,7 +31,7 @@ ABlasterPlayerController::ABlasterPlayerController():
 	HudHealth(0),
 	HudMaxHealth(0),
 	HudScore(0), HudShield(0), HudMaxShield(0), HudCarriedAmmo(0), HudWeaponAmmo(0),
-	HudDefeats(0), HudGrenades(0), WbpReturnToMenu(nullptr)
+	HudDefeats(0), HudGrenades(0), WbpReturnToMenu(nullptr), WbpTeamSelection(nullptr)
 {
 }
 
@@ -88,7 +89,7 @@ void ABlasterPlayerController::SetHudTime()
 		TimeLeft = WarmUpTime - GetServerTime() + LevelStartingTime;
 	else if(MatchState == MatchState::InProgress)
 		TimeLeft = WarmUpTime + MilliSecondsLeft + LevelStartingTime;
-	else if(MatchState == MatchState::MatchCooldown)
+	else if(MatchState == MatchState::MatchInCooldown)
 		TimeLeft = CooldownTime + WarmUpTime + MilliSecondsLeft + LevelStartingTime;
 
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
@@ -104,7 +105,7 @@ void ABlasterPlayerController::SetHudTime()
 	}
 	if(CountDownInt != SecondsLeft)
 	{
-		if(MatchState == MatchState::WaitingToStart || MatchState == MatchState::MatchCooldown)
+		if(MatchState == MatchState::WaitingToStart || MatchState == MatchState::MatchInCooldown)
 			SetHudAnnouncementCountDown(TimeLeft);
 		if(MatchState == MatchState::InProgress)
 			SetHudMatchCountDown(TimeLeft);
@@ -181,7 +182,7 @@ void ABlasterPlayerController::OnRep_MatchState()
 			BlasterHud->Announcement->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
-	else if(MatchState == MatchState::MatchCooldown)
+	else if(MatchState == MatchState::MatchInCooldown)
 		HandleCooldown();
 	else if(MatchState == MatchState::WaitingTeamSelection)
 		HandleTeamSelection();
@@ -511,6 +512,8 @@ void ABlasterPlayerController::HandleTeamSelection()
 	if(WbpTeamSelection == nullptr)
 	{
 		WbpTeamSelection = CreateWidget<UTeamSelection>(this, WTeamSelection);
+		if(WbpTeamSelection)
+			WbpTeamSelection->OnTeamSelectionChanged.AddDynamic(this, &ABlasterPlayerController::OnTeamSelectionChanged);
 	}
 }
 
@@ -561,4 +564,9 @@ void ABlasterPlayerController::ShowReturnToMenu()
 		else
 			WbpReturnToMenu->MenuTearDown();
 	}
+}
+
+void ABlasterPlayerController::OnTeamSelectionChanged(ETeam NewTeam)
+{
+	WbpTeamSelection->MenuTearDown();
 }

@@ -7,7 +7,7 @@
 namespace MatchState
 {
 	extern TACTICALSTRATEGYCPP_API const FName WaitingTeamSelection; // waiting for the player to select a team used in team game mode
-	extern TACTICALSTRATEGYCPP_API const FName MatchCooldown; // match has ended display winner and start new match
+	extern TACTICALSTRATEGYCPP_API const FName MatchInCooldown; // match has ended display winner and start new match
 }
 
 /**

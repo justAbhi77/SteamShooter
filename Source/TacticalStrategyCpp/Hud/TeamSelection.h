@@ -31,6 +31,14 @@ public:
 	UPROPERTY()
 	class APlayerController* PlayerController;
 
+	FOnTeamSelectionChanged TeamSelectionChanged;
+
 protected:
-	void TeamButtonClicked(ETeam NewTeam);
+	void TeamButtonClicked(ETeam NewTeam) const;
+
+	UFUNCTION()
+	void OnRedButtonClicked();
+	
+	UFUNCTION()
+	void OnBlueButtonClicked();
 };
