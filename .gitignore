@@ -2,6 +2,7 @@
 .vs/
 .idea/
 .vsconfig
+*.DotSettings.user
 
 # Compiled Object files
 *.slo
