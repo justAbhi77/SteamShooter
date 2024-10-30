@@ -3,7 +3,9 @@
 
 #include "TeamSelection.h"
 #include "Components/Button.h"
+#include "Kismet/GameplayStatics.h"
 #include "TacticalStrategyCpp/Enums/Team.h"
+#include "TacticalStrategyCpp/GameState/BlasterGameState.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
 void UTeamSelection::MenuSetup()
@@ -52,16 +54,35 @@ void UTeamSelection::MenuTearDown()
 		BlueTeam->OnClicked.RemoveDynamic(this, &UTeamSelection::OnBlueButtonClicked);
 }
 
-void UTeamSelection::TeamButtonClicked(const ETeam NewTeam) const
+void UTeamSelection::TeamButtonClicked(const ETeam NewTeam)
 {
+	if(const UWorld* World = GetWorld())
+		PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
+	if(PlayerController == nullptr) return;
+	
 	if(RedTeam)
 		RedTeam->SetIsEnabled(false);
 	if(BlueTeam)
 		BlueTeam->SetIsEnabled(false);
+
 	if(ABlasterPlayerState* BlasterPlayerState = PlayerController->GetPlayerState<ABlasterPlayerState>())
 	{
-		BlasterPlayerState->SetTeam(NewTeam);
-		TeamSelectionChanged.Broadcast(NewTeam);
+		if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
+		{
+			if(BlasterGameState->RedTeam.Contains(BlasterPlayerState))
+				BlasterGameState->RedTeam.Remove(BlasterPlayerState);
+			
+			if(BlasterGameState->BlueTeam.Contains(BlasterPlayerState))
+				BlasterGameState->BlueTeam.Remove(BlasterPlayerState);
+
+			if(NewTeam == ETeam::ET_Red)
+				BlasterGameState->RedTeam.AddUnique(BlasterPlayerState);
+			else
+				BlasterGameState->BlueTeam.AddUnique(BlasterPlayerState);			
+		
+			BlasterPlayerState->SetTeam(NewTeam);
+			OnTeamSelectionChanged.Broadcast(NewTeam);
+		}
 	}
 }
 

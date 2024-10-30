@@ -513,7 +513,10 @@ void ABlasterPlayerController::HandleTeamSelection()
 	{
 		WbpTeamSelection = CreateWidget<UTeamSelection>(this, WTeamSelection);
 		if(WbpTeamSelection)
+		{
+			WbpTeamSelection->MenuSetup();
 			WbpTeamSelection->OnTeamSelectionChanged.AddDynamic(this, &ABlasterPlayerController::OnTeamSelectionChanged);
+		}
 	}
 }
 
