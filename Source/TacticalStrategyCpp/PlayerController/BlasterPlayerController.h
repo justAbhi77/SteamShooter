@@ -110,6 +110,9 @@ protected:
 
 	UFUNCTION()
 	void OnTeamSelectionChanged(ETeam NewTeam);
+
+	UFUNCTION(Server, Reliable)
+	void Server_OnTeamSelectionChanged();
 	
 private:
 	UPROPERTY()

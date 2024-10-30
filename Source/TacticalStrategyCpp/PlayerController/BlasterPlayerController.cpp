@@ -569,7 +569,19 @@ void ABlasterPlayerController::ShowReturnToMenu()
 	}
 }
 
-void ABlasterPlayerController::OnTeamSelectionChanged(ETeam NewTeam)
+void ABlasterPlayerController::OnTeamSelectionChanged(const ETeam NewTeam)
 {
 	WbpTeamSelection->MenuTearDown();
+	Server_OnTeamSelectionChanged();
+}
+
+void ABlasterPlayerController::Server_OnTeamSelectionChanged_Implementation()
+{	
+	BlasterGameMode = BlasterGameMode == nullptr ?
+		Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)): BlasterGameMode;
+
+	if(BlasterGameMode)
+	{
+		BlasterGameMode->StartMatch();
+	}		
 }
