@@ -400,7 +400,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;
 	*/
-
+	
 	/**
 	 * Elim bot to spawn when player eliminated
 	 */
