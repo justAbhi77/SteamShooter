@@ -20,7 +20,8 @@ void ABlasterTeamsGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	
-	if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
+	/*
+	 if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
 	{
 		ABlasterPlayerState* BlasterPlayerState = NewPlayer->GetPlayerState<ABlasterPlayerState>();
 		if(BlasterPlayerState && BlasterPlayerState->GetTeam() == ETeam::ET_NoTeam)
@@ -37,6 +38,7 @@ void ABlasterTeamsGameMode::PostLogin(APlayerController* NewPlayer)
 			}
 		}
 	}
+	*/
 }
 
 void ABlasterTeamsGameMode::Logout(AController* Exiting)
@@ -57,6 +59,15 @@ void ABlasterTeamsGameMode::Logout(AController* Exiting)
 	}
 }
 
+bool ABlasterTeamsGameMode::HasMatchStarted() const
+{
+	if (GetMatchState() == MatchState::WaitingTeamSelection)
+	{
+		return false;
+	}
+	return Super::HasMatchStarted();
+}
+
 void ABlasterTeamsGameMode::AfterWaitingToStart()
 {
 	// if teams match let player choose team
@@ -67,6 +78,7 @@ void ABlasterTeamsGameMode::HandleMatchHasStarted()
 {
 	Super::HandleMatchHasStarted();
 
+	/*
 	if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
 	{
 		for(auto PlayerState : BlasterGameState->PlayerArray)
@@ -87,4 +99,5 @@ void ABlasterTeamsGameMode::HandleMatchHasStarted()
 			}
 		}
 	}
+	*/	
 }

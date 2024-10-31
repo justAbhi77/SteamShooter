@@ -61,3 +61,10 @@ void ABlasterPlayerState::OnRep_Defeats()
 		}
 	}	
 }
+
+void ABlasterPlayerState::OnRep_Team()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if(Character)
+		Character->OnPollInit();
+}

@@ -112,7 +112,7 @@ protected:
 	void OnTeamSelectionChanged(ETeam NewTeam);
 
 	UFUNCTION(Server, Reliable)
-	void Server_OnTeamSelectionChanged();
+	void Server_OnTeamSelectionChanged(const ETeam NewTeam);
 	
 private:
 	UPROPERTY()

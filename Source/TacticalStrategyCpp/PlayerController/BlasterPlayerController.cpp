@@ -507,7 +507,9 @@ void ABlasterPlayerController::HandleCooldown()
 
 void ABlasterPlayerController::HandleTeamSelection()
 {
-	// TODO: Team Selection
+	if(!IsLocalPlayerController())
+		return;
+	
 	if(WTeamSelection == nullptr) return;
 	if(WbpTeamSelection == nullptr)
 	{
@@ -572,16 +574,31 @@ void ABlasterPlayerController::ShowReturnToMenu()
 void ABlasterPlayerController::OnTeamSelectionChanged(const ETeam NewTeam)
 {
 	WbpTeamSelection->MenuTearDown();
-	Server_OnTeamSelectionChanged();
+	Server_OnTeamSelectionChanged(NewTeam);
 }
 
-void ABlasterPlayerController::Server_OnTeamSelectionChanged_Implementation()
+void ABlasterPlayerController::Server_OnTeamSelectionChanged_Implementation(const ETeam NewTeam)
 {	
+	if(ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>())
+	{
+		if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
+		{
+			if(BlasterGameState->RedTeam.Contains(BlasterPlayerState))
+				BlasterGameState->RedTeam.Remove(BlasterPlayerState);
+			
+			if(BlasterGameState->BlueTeam.Contains(BlasterPlayerState))
+				BlasterGameState->BlueTeam.Remove(BlasterPlayerState);
+
+			if(NewTeam == ETeam::ET_Red)
+				BlasterGameState->RedTeam.AddUnique(BlasterPlayerState);
+			else
+				BlasterGameState->BlueTeam.AddUnique(BlasterPlayerState);
+		}
+		BlasterPlayerState->SetTeam(NewTeam);
+	}
+
 	BlasterGameMode = BlasterGameMode == nullptr ?
 		Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)): BlasterGameMode;
-
 	if(BlasterGameMode)
-	{
 		BlasterGameMode->StartMatch();
-	}		
 }

@@ -37,10 +37,19 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
 	int32 Defeats;
 
-	UPROPERTY(EditAnywhere, Replicated, meta=(AllowPrivateAccess = "true"))
+	UFUNCTION()
+	void OnRep_Team();
+	
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Team , meta=(AllowPrivateAccess = "true"))
 	ETeam Team = ETeam::ET_NoTeam;
 
 public:
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE ETeam GetTeam() const { return Team; }
-	FORCEINLINE void SetTeam(const ETeam TeamToSet) { Team = TeamToSet; }
+	FORCEINLINE void SetTeam(const ETeam TeamToSet)
+	{
+		Team = TeamToSet;
+		if(HasAuthority())
+			OnRep_Team();
+	}
 };

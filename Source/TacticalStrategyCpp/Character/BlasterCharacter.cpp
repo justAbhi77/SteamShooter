@@ -546,8 +546,14 @@ void ABlasterCharacter::PollInit()
 				Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			if(BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 				Multicast_GainedLead();
+
+			OnPollInit();
 		}
 	}
+}
+
+void ABlasterCharacter::OnPollInit_Implementation()
+{
 }
 
 void ABlasterCharacter::MoveForward(const float Value)

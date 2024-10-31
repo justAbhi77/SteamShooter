@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "TacticalStrategyCpp/Enums/Team.h"
 #include "TeamSelection.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeamSelectionChanged, ETeam, NewTeam);

@@ -64,26 +64,8 @@ void UTeamSelection::TeamButtonClicked(const ETeam NewTeam)
 		RedTeam->SetIsEnabled(false);
 	if(BlueTeam)
 		BlueTeam->SetIsEnabled(false);
-
-	if(ABlasterPlayerState* BlasterPlayerState = PlayerController->GetPlayerState<ABlasterPlayerState>())
-	{
-		if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
-		{
-			if(BlasterGameState->RedTeam.Contains(BlasterPlayerState))
-				BlasterGameState->RedTeam.Remove(BlasterPlayerState);
-			
-			if(BlasterGameState->BlueTeam.Contains(BlasterPlayerState))
-				BlasterGameState->BlueTeam.Remove(BlasterPlayerState);
-
-			if(NewTeam == ETeam::ET_Red)
-				BlasterGameState->RedTeam.AddUnique(BlasterPlayerState);
-			else
-				BlasterGameState->BlueTeam.AddUnique(BlasterPlayerState);			
-		
-			BlasterPlayerState->SetTeam(NewTeam);
-			OnTeamSelectionChanged.Broadcast(NewTeam);
-		}
-	}
+	
+	OnTeamSelectionChanged.Broadcast(NewTeam);
 }
 
 void UTeamSelection::OnRedButtonClicked()

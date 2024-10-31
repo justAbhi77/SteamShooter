@@ -47,7 +47,7 @@ public:
 
 	virtual void Destroyed() override;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class ABlasterPlayerState* BlasterPlayerState;
 
 	UPROPERTY(Replicated)
@@ -189,6 +189,13 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void Server_LeaveGame();
+
+	/**
+	 * Called after PollInit when player state is valid
+	 */
+	UFUNCTION(BlueprintNativeEvent)
+	void OnPollInit();
+	
 protected:
 	virtual void BeginPlay() override;
 
