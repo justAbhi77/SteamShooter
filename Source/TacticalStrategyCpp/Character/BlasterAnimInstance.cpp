@@ -50,6 +50,8 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 
 	bElimmed = BlasterCharacter->IsElimmed();
 
+	bHoldingFlag = BlasterCharacter->IsHoldingFlag();
+
 	const FRotator BaseAimRotation = BlasterCharacter->GetBaseAimRotation();
 	const FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity());
 

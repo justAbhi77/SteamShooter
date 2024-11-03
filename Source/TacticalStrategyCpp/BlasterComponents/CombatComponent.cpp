@@ -17,7 +17,7 @@
 UCombatComponent::UCombatComponent():
 	RightHandSocketName(FString("RightHandSocket")),
 	LeftHandSocketName(FString("LeftHandSocket")),BackpackSocketName(FString("BackpackSocket")),
-	ShotgunReloadEndSectionName("ShotgunEnd"),
+	LeftHandFlagSocketName(FString("LeftHandFlagSocket")), ShotgunReloadEndSectionName("ShotgunEnd"),
 	Grenades(4),
 	MaxGrenades(4),
 	Character(nullptr),
@@ -133,9 +133,16 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped, true);
 
 		AttachActorToRightHand(EquippedWeapon);
-		
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;
+		if(EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Flag)
+		{
+			Character->GetCharacterMovement()->bOrientRotationToMovement = true;
+			Character->bUseControllerRotationYaw = false;
+		}
+		else
+		{
+			Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+			Character->bUseControllerRotationYaw = true;
+		}
 
 		UpdateCarriedAmmo();
 
@@ -560,6 +567,12 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
 }
 
+void UCombatComponent::OnRep_HoldingFlag()
+{
+	if(bHoldingFlag && Character && Character->IsLocallyControlled())
+		Character->Crouch();
+}
+
 bool UCombatComponent::ShouldSwapWeapons() const
 {
 	return (EquippedWeapon != nullptr) && (SecondaryWeapon != nullptr);
@@ -645,6 +658,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	
 	DOREPLIFETIME(UCombatComponent, Grenades);
+	
+	DOREPLIFETIME(UCombatComponent, bHoldingFlag);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -653,10 +668,22 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	if(CombatState != ECombatState::ECS_Unoccupied) return;
 
-	if(EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
-		EquipSecondaryWeapon(WeaponToEquip);
+	if(WeaponToEquip->GetWeaponType() == EWeaponType::EWT_Flag)
+	{
+		bHoldingFlag = true;
+		if(Character->HasAuthority())
+			OnRep_HoldingFlag();
+		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachFlagToLeftHand(WeaponToEquip);
+		WeaponToEquip->SetOwner(Character);		
+	}
 	else
-		EquipPrimaryWeapon(WeaponToEquip);
+	{
+		if(EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+			EquipSecondaryWeapon(WeaponToEquip);
+		else
+			EquipPrimaryWeapon(WeaponToEquip);		
+	}
 }
 
 void UCombatComponent::SwapWeapons()
@@ -794,6 +821,17 @@ void UCombatComponent::AttachActorToBackPack(AActor* ActorToAttach) const
 	if(const USkeletalMeshSocket* BackpackSocket = SkeletalMeshComponent->GetSocketByName(FName(BackpackSocketName)))
 	{
 		BackpackSocket->AttachActor(ActorToAttach, SkeletalMeshComponent);
+	}
+}
+
+void UCombatComponent::AttachFlagToLeftHand(AWeapon* Flag)
+{
+	if(Character == nullptr || Flag == nullptr) return;
+	USkeletalMeshComponent* SkeletalMeshComponent = Character->GetMesh();
+	if(SkeletalMeshComponent == nullptr) return;
+	if(const USkeletalMeshSocket* HandSocket = SkeletalMeshComponent->GetSocketByName(FName(LeftHandFlagSocketName)))
+	{
+		HandSocket->AttachActor(Flag, SkeletalMeshComponent);
 	}
 }
 

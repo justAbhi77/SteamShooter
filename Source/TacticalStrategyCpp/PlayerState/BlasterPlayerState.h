@@ -46,10 +46,5 @@ private:
 public:
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE ETeam GetTeam() const { return Team; }
-	FORCEINLINE void SetTeam(const ETeam TeamToSet)
-	{
-		Team = TeamToSet;
-		if(HasAuthority())
-			OnRep_Team();
-	}
+	void SetTeam(const ETeam TeamToSet);
 };

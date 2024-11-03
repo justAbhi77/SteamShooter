@@ -130,6 +130,11 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
 		CharacterLeaving->Elim(true);
 }
 
+float ABlasterGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)
+{	
+	return BaseDamage;
+}
+
 void ABlasterGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -144,7 +149,7 @@ void ABlasterGameMode::OnMatchStateSet()
 	{
 		if(ABlasterPlayerController* BlasterPlayer = Cast<ABlasterPlayerController>(*It))
 		{
-			BlasterPlayer->OnMatchStateSet(MatchState);
+			BlasterPlayer->OnMatchStateSet(MatchState, bTeamsMatch);
 		}
 	}
 }

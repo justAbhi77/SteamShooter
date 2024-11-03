@@ -47,7 +47,7 @@ public:
 
 	virtual void ReceivedPlayer() override;
 
-	void OnMatchStateSet(FName State);
+	void OnMatchStateSet(FName State, bool bisTeamsMatch = false);
 
 	void HandleCooldown();
 	
@@ -60,6 +60,13 @@ public:
 	FHighPingDelegate HighPingDelegate;
 
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
+
+	void HideTeamScores();
+
+	void InitTeamScores();
+
+	void SetHudRedTeamScore(int32 RedScore);
+	void SetHudBlueTeamScore(int32 BlueScore);
 	
 protected:	
 	virtual void BeginPlay() override;
@@ -112,7 +119,18 @@ protected:
 	void OnTeamSelectionChanged(ETeam NewTeam);
 
 	UFUNCTION(Server, Reliable)
-	void Server_OnTeamSelectionChanged(const ETeam NewTeam);
+	void Server_OnTeamSelectionChanged(const ETeam NewTeam);	
+
+	UFUNCTION()
+	void OnRep_TeamsMatch();
+	
+	UPROPERTY(ReplicatedUsing = OnRep_TeamsMatch)
+	bool bTeamsMatch = false;
+
+	FString GetInfoText(const TArray<class ABlasterPlayerState*>& Players,
+		const ABlasterPlayerState* BlasterPlayerState);
+
+	FString GetTeamsInfoText(const class ABlasterGameState* BlasterGameState);
 	
 private:
 	UPROPERTY()
@@ -165,5 +183,5 @@ private:
 	UPROPERTY()
 	class UTeamSelection* WbpTeamSelection;
 
-	bool bReturnToMenuOpen = false;
+	bool bReturnToMenuOpen = false, bHasSelectedTeam = false;
 };

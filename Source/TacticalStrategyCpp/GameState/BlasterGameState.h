@@ -39,6 +39,9 @@ public:
 	UPROPERTY(ReplicatedUsing=OnRep_BlueTeamScore)
 	float BlueTeamScore;
 
+	void RedTeamScores();
+	void BlueTeamScores();
+
 private:
 	float TopScore;
 };

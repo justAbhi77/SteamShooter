@@ -4,7 +4,13 @@
 #include "BlasterTeamsGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "TacticalStrategyCpp/GameState/BlasterGameState.h"
+#include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
+
+ABlasterTeamsGameMode::ABlasterTeamsGameMode()	
+{
+	bTeamsMatch = true;
+}
 
 void ABlasterTeamsGameMode::Tick(const float DeltaSeconds)
 {
@@ -66,6 +72,42 @@ bool ABlasterTeamsGameMode::HasMatchStarted() const
 		return false;
 	}
 	return Super::HasMatchStarted();
+}
+
+float ABlasterTeamsGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)
+{
+	const ABlasterPlayerState* AttackerPlayerState = Attacker->GetPlayerState<ABlasterPlayerState>();
+	const ABlasterPlayerState* VictimPlayerState = Victim->GetPlayerState<ABlasterPlayerState>();
+	
+	if(AttackerPlayerState == nullptr || VictimPlayerState == nullptr) return 0;
+
+	if(VictimPlayerState->GetTeam() == ETeam::ET_NoTeam || AttackerPlayerState->GetTeam() == ETeam::ET_NoTeam)
+		return 0;
+
+	if(AttackerPlayerState->GetTeam() == VictimPlayerState->GetTeam()) return 0;
+
+	if(VictimPlayerState == AttackerPlayerState) return 0; // prevent self damage in teams mode
+
+	return BaseDamage;
+}
+
+void ABlasterTeamsGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter,
+	class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
+{
+	Super::PlayerEliminated(ElimmedCharacter, VictimController, AttackerController);
+	if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
+	{
+		ABlasterPlayerState* AttackerPlayerState = AttackerController ?
+			Cast<ABlasterPlayerState>(AttackerController->PlayerState) : nullptr;
+		if(AttackerPlayerState)
+		{
+			if(AttackerPlayerState->GetTeam() == ETeam::ET_Blue)
+				BlasterGameState->BlueTeamScores();
+			
+			if(AttackerPlayerState->GetTeam() == ETeam::ET_Red)
+				BlasterGameState->RedTeamScores();
+		}
+	}
 }
 
 void ABlasterTeamsGameMode::AfterWaitingToStart()

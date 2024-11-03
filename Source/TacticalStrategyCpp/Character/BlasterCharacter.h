@@ -6,6 +6,7 @@
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "TacticalStrategyCpp/Enums/CombatState.h"
+#include "TacticalStrategyCpp/Enums/Team.h"
 #include "TacticalStrategyCpp/Enums/TurninginPlace.h"
 #include "TacticalStrategyCpp/Interfaces/InteractWithCrosshairsInterface.h"
 #include "BlasterCharacter.generated.h"
@@ -64,7 +65,7 @@ public:
 
 	void UpdateHudAmmo();
 
-	void SpawnDefaultWeapon() const;
+	void SpawnDefaultWeapon();
 	
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
 	class UBoxComponent* HeadBox;
@@ -193,8 +194,12 @@ public:
 	/**
 	 * Called after PollInit when player state is valid
 	 */
-	UFUNCTION(BlueprintNativeEvent)
 	void OnPollInit();
+	
+	UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName="OnPollInit", ScriptName="OnPollInit"))
+	void K2_OnPollInit();
+
+	void SetTeamColor(ETeam Team);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -259,6 +264,8 @@ protected:
 	// hit boxes for server side Rewind
 
 	void SetupBoxComponent(UBoxComponent*& CompToSetup, const FString& Name, const FString& BoneToAttachTo);
+
+	void SetSpawnPoint();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -400,6 +407,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;
 	*/
+
+	// Team Colors
+	UPROPERTY(EditAnywhere, Category = Elim, BlueprintReadWrite, meta=(allowPrivateAccess = "true"))
+	UMaterialInterface* RedDissolveMaterial;
+	
+	UPROPERTY(EditAnywhere, Category = Elim, BlueprintReadWrite, meta=(allowPrivateAccess = "true"))
+	UMaterialInterface* BlueDissolveMaterial;
 	
 	/**
 	 * Elim bot to spawn when player eliminated
@@ -427,6 +441,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+	UPROPERTY()
+	class ABlasterGameMode* BlasterGameMode;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -497,4 +514,10 @@ public:
 	bool IsLocallyReloading() const;
 
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
+
+	FORCEINLINE bool IsHoldingFlag() const;
+
+	ETeam GetTeam();
+
+	void SetHoldingFlag(bool bHolding) const;
 };

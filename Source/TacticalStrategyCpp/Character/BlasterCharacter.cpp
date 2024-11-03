@@ -22,6 +22,7 @@
 #include "TacticalStrategyCpp/GameMode/BlasterGameMode.h"
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/GameState/BlasterGameState.h"
+#include "TacticalStrategyCpp/PlayerStart/TeamsPlayerStart.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 #include "TacticalStrategyCpp/Weapon/Weapon.h"
 
@@ -131,6 +132,30 @@ void ABlasterCharacter::SetupBoxComponent(UBoxComponent*& CompToSetup, const FSt
 	HitCollisionBoxes.Add(FName(BoneToAttachTo), CompToSetup);
 }
 
+void ABlasterCharacter::SetSpawnPoint()
+{
+	if(HasAuthority() && BlasterPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamsPlayerStart::StaticClass(), PlayerStarts);
+
+		TArray<ATeamsPlayerStart*> TeamPlayerStarts;
+		for (const auto Start : PlayerStarts)
+		{
+			ATeamsPlayerStart* TeamStart = Cast<ATeamsPlayerStart>(Start);
+			if(TeamStart && TeamStart->Team == BlasterPlayerState->GetTeam())
+				TeamPlayerStarts.Add(TeamStart);
+		}
+
+		if(TeamPlayerStarts.Num() > 0)
+		{
+			const int32 Selection = FMath::RandRange(0, TeamPlayerStarts.Num() - 1);
+			ATeamsPlayerStart* ChosenStart = TeamPlayerStarts[Selection];
+			SetActorLocationAndRotation(ChosenStart->GetActorLocation(), ChosenStart->GetActorRotation());
+		}
+	}
+}
+
 void ABlasterCharacter::OnRep_ReplicatedMovement()
 {
 	Super::OnRep_ReplicatedMovement();
@@ -238,8 +263,9 @@ void ABlasterCharacter::Destroyed()
 		ElimBotComp->DestroyComponent();
 	}
 
-	const ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
-
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
+	if(BlasterGameMode == nullptr) return;
+	
 	// ReSharper disable once CppTooWideScopeInitStatement
 	const bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
 
@@ -247,12 +273,14 @@ void ABlasterCharacter::Destroyed()
 		Combat-> EquippedWeapon->Destroy();
 }
 
-void ABlasterCharacter::SpawnDefaultWeapon() const
+void ABlasterCharacter::SpawnDefaultWeapon()
 {
 	UWorld* World = GetWorld();
-	// ReSharper disable once CppTooWideScopeInitStatement
-	const ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
-	if(World && BlasterGameMode && !bElimmed && DefaultWeaponClass)
+	if(World == nullptr) return;
+	
+	// ReSharper disable once CppTooWideScopeInitStatement	
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;	
+	if(BlasterGameMode && !bElimmed && DefaultWeaponClass)
 	{
 		AWeapon* StartingWeapon =  World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		StartingWeapon->bDestroyWeapon = true;
@@ -281,6 +309,26 @@ void ABlasterCharacter::Multicast_LostLead_Implementation()
 	if(CrownComponent)
 	{
 		CrownComponent->DestroyComponent();
+	}
+}
+
+void ABlasterCharacter::SetTeamColor(const ETeam Team)
+{
+	if(GetMesh() == nullptr) return;
+	
+	switch (Team)
+	{
+	case ETeam::ET_NoTeam:
+		break;
+	case ETeam::ET_Red:
+		if(RedDissolveMaterial)
+			GetMesh()->SetMaterial(0, RedDissolveMaterial);
+		break;
+	case ETeam::ET_Blue:
+		if(BlueDissolveMaterial)
+			GetMesh()->SetMaterial(0, BlueDissolveMaterial);
+		break;
+	default: ;
 	}
 }
 
@@ -501,7 +549,10 @@ void ABlasterCharacter::OnRep_Shield(float LastShield)
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
                                       AController* InstigatorController, AActor* DamageCauser)
 {
-	if(bElimmed) return;
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
+	if(bElimmed || BlasterGameMode == nullptr) return;
+
+	Damage = BlasterGameMode->CalculateDamage(InstigatorController, Controller, Damage);
 
 	float DamageToHealth = Damage;
 	const float PrevShield = Shield;
@@ -524,7 +575,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
 	OnRep_Health(PrevHealth);
 	if(Health == 0.f)
-		if(ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+		if(BlasterGameMode)
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :
 				BlasterPlayerController;
@@ -553,8 +604,14 @@ void ABlasterCharacter::PollInit()
 	}
 }
 
-void ABlasterCharacter::OnPollInit_Implementation()
+void ABlasterCharacter::OnPollInit()
 {
+	if(BlasterPlayerState)
+	{
+		SetTeamColor(BlasterPlayerState->GetTeam());
+		SetSpawnPoint();
+	}
+	K2_OnPollInit();
 }
 
 void ABlasterCharacter::MoveForward(const float Value)
@@ -596,6 +653,7 @@ void ABlasterCharacter::EquipButtonPressed()
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
+		if(Combat->bHoldingFlag) return;
 		if(Combat->CombatState == ECombatState::ECS_Unoccupied) Server_EquipButtonPressed();
 		if(Combat->ShouldSwapWeapons() && !HasAuthority() && Combat->CombatState == ECombatState::ECS_Unoccupied &&
 			OverlappingWeapon == nullptr)
@@ -609,6 +667,7 @@ void ABlasterCharacter::EquipButtonPressed()
 
 void ABlasterCharacter::CrouchButtonPressed()
 {
+	if(Combat && Combat->bHoldingFlag) return;
 	if(bIsCrouchButtonToggle && bIsCrouched)
 	{
 		UnCrouch();
@@ -621,6 +680,7 @@ void ABlasterCharacter::CrouchButtonPressed()
 
 void ABlasterCharacter::CrouchButtonReleased()
 {
+	if(Combat && Combat->bHoldingFlag) return;
 	if(!bIsCrouchButtonToggle)
 	{
 		UnCrouch();
@@ -632,7 +692,10 @@ void ABlasterCharacter::ReloadButtonPressed()
 {
 	if(bDisableGameplay) return;
 	if(Combat)
+	{		
+		if(Combat->bHoldingFlag) return;
 		Combat->Reload();
+	}
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
@@ -641,6 +704,7 @@ void ABlasterCharacter::AimButtonPressed()
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
+		if(Combat->bHoldingFlag) return;
 		Combat->SetAiming(true);
 		SetAimingSharpness(true);
 	}
@@ -652,6 +716,7 @@ void ABlasterCharacter::AimButtonReleased()
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
+		if(Combat->bHoldingFlag) return;
 		Combat->SetAiming(false);
 		SetAimingSharpness(false);
 	}
@@ -662,6 +727,7 @@ void ABlasterCharacter::GrenadeButtonPressed()
 {
 	if(Combat)
 	{
+		if(Combat->bHoldingFlag) return;
 		Combat->ThrowGrenade();
 	}
 }
@@ -763,14 +829,12 @@ void ABlasterCharacter::Jump()
 {
 	// if(bDisableGameplay) return;
 	
+	if(Combat && Combat->bHoldingFlag) return;
+	
 	if(bIsCrouched)
-	{
 		UnCrouch();
-	}
 	else
-	{
 		Super::Jump();
-	}
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
@@ -778,7 +842,8 @@ void ABlasterCharacter::FireButtonPressed()
 {
 	if(bDisableGameplay) return;
 	if(Combat)
-	{
+	{		
+		if(Combat->bHoldingFlag) return;
 		Combat->FireButtonPressed(true);
 	}
 }
@@ -789,6 +854,7 @@ void ABlasterCharacter::FireButtonReleased()
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
+		if(Combat->bHoldingFlag) return;
 		Combat->FireButtonPressed(false);
 	}
 }
@@ -880,7 +946,7 @@ void ABlasterCharacter::HideCameraOnCharacterClose() const
 
 void ABlasterCharacter::ElimTimerFinished()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;	
 	if(BlasterGameMode && !bLeftGame)
 	{
 		BlasterGameMode->RequestRespawn(this, Controller);
@@ -892,8 +958,8 @@ void ABlasterCharacter::ElimTimerFinished()
 }
 
 void ABlasterCharacter::Server_LeaveGame_Implementation()
-{
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+{	
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
 	if(BlasterGameMode && BlasterPlayerState)
 	{
@@ -973,8 +1039,42 @@ bool ABlasterCharacter::IsLocallyReloading() const
 	return Combat->bLocallyReloading;
 }
 
+bool ABlasterCharacter::IsHoldingFlag() const
+{
+	if(Combat)
+		return Combat->bHoldingFlag;
+	return false;
+}
+
+ETeam ABlasterCharacter::GetTeam()
+{
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if(BlasterPlayerState == nullptr) return ETeam::ET_NoTeam;
+	return BlasterPlayerState->GetTeam();
+}
+
+void ABlasterCharacter::SetHoldingFlag(const bool bHolding) const
+{
+	if(Combat == nullptr) return;
+	Combat->bHoldingFlag = bHolding;
+}
+
 void ABlasterCharacter::RotateInPlace(const float DeltaTime)
 {
+	if(Combat && Combat->bHoldingFlag)
+	{
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+
+	if(Combat && Combat->EquippedWeapon)
+	{
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
+	
 	if(bDisableGameplay)
 	{
 		bUseControllerRotationYaw = false;

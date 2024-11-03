@@ -35,6 +35,9 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 	FString BackpackSocketName;
+	
+	UPROPERTY(EditAnywhere)
+	FString LeftHandFlagSocketName;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 	void SwapWeapons();
@@ -138,6 +141,8 @@ protected:
 	void AttachActorToRightHand(AActor* ActorToAttach) const;
 	void AttachActorToLeftHand(AActor* ActorToAttach) const;
 	void AttachActorToBackPack(AActor* ActorToAttach) const;
+
+	void AttachFlagToLeftHand(AWeapon* Flag);
 
 	void UpdateCarriedAmmo();
 
@@ -276,9 +281,15 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState;
+
+	UFUNCTION()
+	void OnRep_HoldingFlag();
+
+	UPROPERTY(ReplicatedUsing = OnRep_HoldingFlag)
+	bool bHoldingFlag = false; 
 	
 public:
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 
-	bool ShouldSwapWeapons() const;
+	bool ShouldSwapWeapons() const;	
 };

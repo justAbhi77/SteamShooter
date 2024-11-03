@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "WeaponTypes.h"
 #include "GameFramework/Actor.h"
+#include "TacticalStrategyCpp/Enums/Team.h"
 #include "Weapon.generated.h"
 
 UENUM (BlueprintType)
@@ -44,7 +45,7 @@ public:
 
 	virtual void Fire(const FVector& HitTarget);
 
-	void Dropped();
+	virtual void Dropped();
 	
 	// Textures for Weapon Crosshairs
 
@@ -167,22 +168,33 @@ protected:
 
 	UFUNCTION()
 	void OnPingTooHigh(bool bPingTooHigh);
+
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
+
+	UPROPERTY(EditAnywhere)
+	ETeam Team;
 	
-private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properies")
 	USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properies")
 	class USphereComponent* AreaSphere;
-	
-	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properies")
-	EWeaponState WeaponState;	
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properies")
+	class UWidgetComponent* PickupWidget;	
 	
 	UFUNCTION()
 	void OnRep_WeaponState();
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Properies")
-	class UWidgetComponent* PickupWidget;
+	virtual void OnEquipped();
+
+	virtual void OnDropped(); 
+	
+private:
+	
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properies")
+	EWeaponState WeaponState;
 
 	/**
 	 * Socket for IK in the animation graph for the left hand
@@ -198,9 +210,6 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	FString AmmoEjectFlashSocketName;
-
-	UPROPERTY(EditAnywhere)
-	EWeaponType WeaponType;
 
 public:
 	void SetWeaponState(const EWeaponState State, const bool bUpdateLocally = false);
@@ -224,5 +233,7 @@ public:
 
 	FORCEINLINE float GetDamage() const { return Damage; }
 	FORCEINLINE float GetHeadshotDamage() const { return HeadShotDamage; }
+
+	FORCEINLINE ETeam GetTeam() const { return Team; }
 	
 };

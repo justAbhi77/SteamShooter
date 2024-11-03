@@ -3,6 +3,7 @@
 
 #include "BlasterGameState.h"
 #include "Net/UnrealNetwork.h"
+#include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 #include "TacticalStrategyCpp/PlayerState/BlasterPlayerState.h"
 
 ABlasterGameState::ABlasterGameState():
@@ -41,8 +42,26 @@ void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* ScoringPlayer)
 
 void ABlasterGameState::OnRep_RedTeamScore()
 {
+	if(ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController()))
+		PlayerController->SetHudRedTeamScore(RedTeamScore);
 }
 
 void ABlasterGameState::OnRep_BlueTeamScore()
 {
+	if(ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController()))
+		PlayerController->SetHudBlueTeamScore(BlueTeamScore);
+}
+
+void ABlasterGameState::RedTeamScores()
+{
+	++RedTeamScore;
+	if(HasAuthority())
+		OnRep_RedTeamScore();
+}
+
+void ABlasterGameState::BlueTeamScores()
+{
+	++BlueTeamScore;
+	if(HasAuthority())
+		OnRep_BlueTeamScore();
 }

@@ -41,6 +41,10 @@ public:
 
 	float LevelStartingTime;
 
+	virtual float CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage);
+
+	bool bTeamsMatch = false;
+
 protected:
 	virtual void BeginPlay() override;
 	

@@ -114,7 +114,10 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
-	{		
+	{
+		if(WeaponType == EWeaponType::EWT_Flag && BlasterCharacter->GetTeam() == Team) return;
+		if(BlasterCharacter->IsHoldingFlag()) return;
+		
 		BlasterCharacter->SetOverlappingWeapon(this);
 	}
 }
@@ -124,7 +127,10 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
-	{		
+	{
+		if(WeaponType == EWeaponType::EWT_Flag && BlasterCharacter->GetTeam() == Team) return;
+		if(BlasterCharacter->IsHoldingFlag()) return;
+		
 		BlasterCharacter->SetOverlappingWeapon(nullptr);
 	}	
 }
@@ -172,29 +178,7 @@ void AWeapon::OnRep_WeaponState()
 	case EWeaponState::EWS_Initial:
 		break;
 	case EWeaponState::EWS_Equipped:
-		ShowPickupWidget(false);
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		WeaponMesh->SetSimulatePhysics(false);
-		WeaponMesh->SetEnableGravity(false);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if(WeaponType == EWeaponType::EWT_SMG)
-		{
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			WeaponMesh->SetEnableGravity(true);
-			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
-		}
-		EnableCustomDepth(false);
-		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
-		BlasterOwnerCharacter;
-		if(BlasterOwnerCharacter && bUseServerSideRewind)
-		{
-			BlasterOwnerController = BlasterOwnerController == nullptr
-					? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
-			if(BlasterOwnerController && HasAuthority() && !BlasterOwnerController->HighPingDelegate.IsBound())
-			{
-				BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
-			}
-		}	
+		OnEquipped();
 		break;
 	case EWeaponState::EWS_EquippedSecondary:
 		ShowPickupWidget(false);
@@ -223,35 +207,67 @@ void AWeapon::OnRep_WeaponState()
 		}	
 		break;
 	case EWeaponState::EWS_Dropped:
-		if(HasAuthority())
-		{
-			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		}
-		WeaponMesh->SetSimulatePhysics(true);
-		WeaponMesh->SetEnableGravity(true);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-		
-		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
-		WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn,ECR_Ignore);
-		WeaponMesh->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
-		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
-		WeaponMesh->MarkRenderStateDirty();
-		EnableCustomDepth(true);
-		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
-			BlasterOwnerCharacter;
-		if(BlasterOwnerCharacter && bUseServerSideRewind)
-		{
-			BlasterOwnerController = BlasterOwnerController == nullptr
-					? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
-			if(BlasterOwnerController && HasAuthority() && BlasterOwnerController->HighPingDelegate.IsBound())
-			{
-				BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
-			}
-		}	
+		OnDropped();
 		break;
 	case EWeaponState::EWS_MAX:
 		break;
 	default: ;
+	}
+}
+
+void AWeapon::OnEquipped()
+{
+	ShowPickupWidget(false);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if(WeaponType == EWeaponType::EWT_SMG)
+	{
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	}
+	EnableCustomDepth(false);
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
+	BlasterOwnerCharacter;
+	if(BlasterOwnerCharacter && bUseServerSideRewind)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr
+				? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+		if(BlasterOwnerController && HasAuthority() && !BlasterOwnerController->HighPingDelegate.IsBound())
+		{
+			BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
+}
+
+void AWeapon::OnDropped()
+{
+	if(HasAuthority())
+	{
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+		
+	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
+	WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn,ECR_Ignore);
+	WeaponMesh->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+	WeaponMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
+		BlasterOwnerCharacter;
+	if(BlasterOwnerCharacter && bUseServerSideRewind)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr
+				? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+		if(BlasterOwnerController && HasAuthority() && BlasterOwnerController->HighPingDelegate.IsBound())
+		{
+			BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
 	}
 }
 
@@ -335,8 +351,7 @@ void AWeapon::Dropped()
 	WeaponMesh->DetachFromComponent(DetachRule);
 	SetOwner(nullptr);
 	BlasterOwnerCharacter = nullptr;
-	BlasterOwnerController = nullptr;
-	
+	BlasterOwnerController = nullptr;	
 }
 
 FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget) const

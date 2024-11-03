@@ -29,6 +29,15 @@ public:
 	
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* ScoreText; // ScoreAmount
+
+	UPROPERTY(meta=(BindWidget))
+	class UHorizontalBox* TeamScoreContainer;
+	
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* RedTeamScore;
+	
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* BlueTeamScore;
 	
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* DefeatText; // DefeatsAmount

@@ -62,9 +62,19 @@ void ABlasterPlayerState::OnRep_Defeats()
 	}	
 }
 
+void ABlasterPlayerState::SetTeam(const ETeam TeamToSet)
+{
+	Team = TeamToSet;
+	if(HasAuthority())
+		OnRep_Team();
+}
+
 void ABlasterPlayerState::OnRep_Team()
 {
 	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
 	if(Character)
+	{
+		Character->BlasterPlayerState = this;
 		Character->OnPollInit();
+	}
 }
