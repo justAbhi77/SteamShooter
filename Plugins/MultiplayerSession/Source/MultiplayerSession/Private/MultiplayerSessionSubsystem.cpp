@@ -4,6 +4,7 @@
 #include "MultiplayerSessionSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+#include "OnlineSubsystemUtils.h"
 #include "Online/OnlineSessionNames.h"
 
 UMultiplayerSessionSubsystem::UMultiplayerSessionSubsystem():
@@ -14,7 +15,7 @@ UMultiplayerSessionSubsystem::UMultiplayerSessionSubsystem():
 	StartSessionCompleteDelegate(FOnStartSessionCompleteDelegate::CreateUObject(this,&ThisClass::OnStartSessionComplete)),
 	LastNumPublicConnections(0)
 {
-	if(const IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+	if(const IOnlineSubsystem* Subsystem = Online::GetSubsystem(UObject::GetWorld()))
 	{
 		SessionInterface = Subsystem->GetSessionInterface();
 	}
@@ -22,6 +23,9 @@ UMultiplayerSessionSubsystem::UMultiplayerSessionSubsystem():
 
 void UMultiplayerSessionSubsystem::CreateSession(const int32 NumPublicConnections, const FString& MatchType)
 {
+	DesiredNumPublicConnections = NumPublicConnections;
+	DesiredMatchType = MatchType;
+	
 	if(!SessionInterface.IsValid())
 		return;
 	
@@ -40,7 +44,7 @@ void UMultiplayerSessionSubsystem::CreateSession(const int32 NumPublicConnection
 
 	LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
 	
-	LastSessionSettings->bIsLANMatch = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL");
+	LastSessionSettings->bIsLANMatch = (Online::GetSubsystem(GetWorld())->GetSubsystemName() == "NULL");
 	LastSessionSettings->NumPublicConnections = NumPublicConnections;
 	LastSessionSettings->bAllowJoinInProgress = true;
 	LastSessionSettings->bAllowJoinViaPresence = true;
@@ -72,7 +76,7 @@ void UMultiplayerSessionSubsystem::FindSessions(int32 MaxSearchResults)
 	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
 
 	LastSessionSearch->MaxSearchResults = MaxSearchResults;
-	LastSessionSearch->bIsLanQuery = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL");
+	LastSessionSearch->bIsLanQuery = (Online::GetSubsystem(GetWorld())->GetSubsystemName() == "NULL");
 	LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();

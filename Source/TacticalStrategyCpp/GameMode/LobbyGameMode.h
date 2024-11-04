@@ -18,9 +18,15 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	virtual void Logout(AController* Exiting) override;
+	
+	UPROPERTY(EditAnywhere);
+	FString FreeForAllMapPath;
+	
+	UPROPERTY(EditAnywhere);
+	FString TeamsMapPath;
 
 	UPROPERTY(EditAnywhere);
-	FString MainGameMapPath;
+	FString CaptureFlagMapPath;
 
 	FTimerHandle PostLoginWaitTime;
 };

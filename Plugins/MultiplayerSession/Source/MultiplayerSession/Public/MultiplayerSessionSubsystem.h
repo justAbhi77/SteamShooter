@@ -55,7 +55,10 @@ public:
 
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
 
-	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
+	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;	
+
+	int32 DesiredNumPublicConnections{0};
+	FString DesiredMatchType{};
 	
 protected:
 	void OnCreateSessionComplete (FName SessionName, bool bWasSuccessful);
