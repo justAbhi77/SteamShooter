@@ -7,8 +7,9 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSubsystem.h"
 #include "MultiplayerSessionSubsystem.h"
+#include "OnlineSubsystemUtils.h"
 
-void UWMenu::MenuSetup(const int32 NumberPublicConnections, FString TypeOfMatch, const FString LobbyPath)
+void UWMenu::MenuSetup(const int32 NumberPublicConnections, EMultiplayerModes TypeOfMatch, const FString LobbyPath)
 {
 	NumPublicConnections = NumberPublicConnections;
 	MatchType = TypeOfMatch;
@@ -109,8 +110,11 @@ void UWMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionRes
 	
 	for(auto Result : SessionResults)
 	{
-		FString SettingsValue;
-		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
+		int32 ValueType = -1;
+		Result.Session.SessionSettings.Get(FName("MatchType"), ValueType);
+		if(ValueType == -1) continue;
+
+		const EMultiplayerModes SettingsValue = static_cast<EMultiplayerModes>(ValueType);
 		if(SettingsValue == MatchType)
 		{
 			MultiplayerSessionSubsystem->JoinSession(Result);
@@ -119,7 +123,7 @@ void UWMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionRes
 	}
 
 	if(!bWasSuccessful || SessionResults.Num() == 0)
-	{		
+	{
 		JoinButton->SetIsEnabled(true);
 	}
 }
@@ -127,7 +131,7 @@ void UWMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionRes
 // ReSharper disable once CppMemberFunctionMayBeConst
 void UWMenu::OnJoinSession(const EOnJoinSessionCompleteResult::Type Result)
 {
-	if(const IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+	if(const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld()))
 	{
 		if(IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface())
 		{

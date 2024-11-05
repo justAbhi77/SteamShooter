@@ -4,6 +4,7 @@
 #include "MultiplayerSessionSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+#include "MultiplayerModes.h"
 #include "OnlineSubsystemUtils.h"
 #include "Online/OnlineSessionNames.h"
 
@@ -21,7 +22,7 @@ UMultiplayerSessionSubsystem::UMultiplayerSessionSubsystem():
 	}
 }
 
-void UMultiplayerSessionSubsystem::CreateSession(const int32 NumPublicConnections, const FString& MatchType)
+void UMultiplayerSessionSubsystem::CreateSession(const int32 NumPublicConnections, const EMultiplayerModes& MatchType)
 {
 	DesiredNumPublicConnections = NumPublicConnections;
 	DesiredMatchType = MatchType;
@@ -54,7 +55,9 @@ void UMultiplayerSessionSubsystem::CreateSession(const int32 NumPublicConnection
 	LastSessionSettings->BuildUniqueId = 1;
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
 
-	LastSessionSettings->Set(FName("MatchType"), MatchType,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	const int32 ValueType = static_cast<int32>(MatchType);
+
+	LastSessionSettings->Set(FName("MatchType"), ValueType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();	
 	if(!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))

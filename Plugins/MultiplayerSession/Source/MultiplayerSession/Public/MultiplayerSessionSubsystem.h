@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MultiplayerModes.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "MultiplayerSessionSubsystem.generated.h"
@@ -34,7 +35,7 @@ public:
 
 	// Exposed Functions for Menu
 
-	void CreateSession(int32 NumPublicConnections, const FString& MatchType);
+	void CreateSession(int32 NumPublicConnections, const EMultiplayerModes& MatchType);
 
 	void FindSessions(int32 MaxSearchResults);
 
@@ -58,7 +59,7 @@ public:
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;	
 
 	int32 DesiredNumPublicConnections{0};
-	FString DesiredMatchType{};
+	EMultiplayerModes DesiredMatchType{};
 	
 protected:
 	void OnCreateSessionComplete (FName SessionName, bool bWasSuccessful);
@@ -94,5 +95,5 @@ private:
 
 	bool bCreateSessionOnDestroy{ false };
 	int32 LastNumPublicConnections;
-	FString LastMatchType;
+	EMultiplayerModes LastMatchType;
 };

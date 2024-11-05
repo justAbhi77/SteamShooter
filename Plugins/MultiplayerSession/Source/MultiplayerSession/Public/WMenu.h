@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MultiplayerModes.h"
 #include "Blueprint/UserWidget.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "WMenu.generated.h"
@@ -17,7 +18,8 @@ class MULTIPLAYERSESSION_API UWMenu : public UUserWidget
 	
 public:
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup(int32 NumberPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/Maps/Lobby")));
+	void MenuSetup(int32 NumberPublicConnections = 4, EMultiplayerModes TypeOfMatch = EMultiplayerModes::EMM_Teams,
+		FString LobbyPath = FString(TEXT("/Game/Maps/Lobby")));
 
 protected:
 	virtual bool Initialize() override;
@@ -66,7 +68,7 @@ private:
 	int32 NumPublicConnections{4};
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	FString MatchType{TEXT("FreeForAll")};
+	EMultiplayerModes MatchType = EMultiplayerModes::EMM_FreeForAll;
 
 	FString PathToLobby{TEXT("")};
 };

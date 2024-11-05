@@ -31,13 +31,17 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		if(UWorld* World = GetWorld())
 		{
 			bUseSeamlessTravel = true;
-			FString MainGameMapPath{}, MatchType = MultiplayerSubsystem->DesiredMatchType;
-			// TODO: add an enum for match type instead of string
-			if(MatchType == "FreeForAll")
+			FString MainGameMapPath{};
+			EMultiplayerModes MatchType = EMultiplayerModes::EMM_Teams;
+
+			if(MultiplayerSubsystem)
+				MatchType = MultiplayerSubsystem->DesiredMatchType;
+			
+			if(MatchType == EMultiplayerModes::EMM_FreeForAll)
 				MainGameMapPath = FreeForAllMapPath;
-			else if (MatchType == "Teams")
+			else if (MatchType == EMultiplayerModes::EMM_Teams)
 				MainGameMapPath = TeamsMapPath;
-			else if(MatchType == "CaptureTheFlag")
+			else if(MatchType == EMultiplayerModes::EMM_CaptureFlag)
 				MainGameMapPath = CaptureFlagMapPath;
 			
 			MainGameMapPath = FString::Printf(TEXT("%s?listen"), *MainGameMapPath);
