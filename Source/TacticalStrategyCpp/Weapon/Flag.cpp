@@ -17,14 +17,16 @@ AFlag::AFlag():
 	SetRootComponent(FlagMesh);
 	FlagMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+	FlagMesh->SetSimulatePhysics(false);
+	FlagMesh->SetEnableGravity(false);
+	
 	AreaSphere->SetupAttachment(FlagMesh);
 	PickupWidget->SetupAttachment(FlagMesh);
 }
 
 void AFlag::Dropped()
 {
-	SetWeaponState(EWeaponState::EWS_Dropped);
+	//SetWeaponState(EWeaponState::EWS_Dropped);
 
 	const FDetachmentTransformRules DetachRule(EDetachmentRule::KeepWorld, true);
 	FlagMesh->DetachFromComponent(DetachRule);
@@ -45,10 +47,10 @@ void AFlag::ResetFlag()
 	if(!HasAuthority()) return;
 	Dropped();
 	SetActorTransform(InitialTransform);
-	SetWeaponState(EWeaponState::EWS_Initial);
 	
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	AreaSphere->SetCollisionResponseToChannel (ECC_Pawn, ECR_Overlap);
+	SetWeaponState(EWeaponState::EWS_Initial);
 }
 
 void AFlag::BeginPlay()
@@ -56,6 +58,7 @@ void AFlag::BeginPlay()
 	Super::BeginPlay();
 
 	InitialTransform = GetActorTransform();
+	EnableCustomDepth(false);
 }
 
 void AFlag::OnEquipped()
@@ -66,7 +69,6 @@ void AFlag::OnEquipped()
 	FlagMesh->SetEnableGravity(false);
 	FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	FlagMesh->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
-	EnableCustomDepth(false);
 }
 
 void AFlag::OnDropped()
@@ -77,13 +79,9 @@ void AFlag::OnDropped()
 	}
 	FlagMesh->SetSimulatePhysics(true);
 	FlagMesh->SetEnableGravity(true);
-	FlagMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);		
-	FlagMesh->SetCollisionResponseToAllChannels(ECR_Block);
-	FlagMesh->SetCollisionResponseToChannel(ECC_Pawn,ECR_Ignore);
-	FlagMesh->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
-	FlagMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
-	FlagMesh->MarkRenderStateDirty();
-	EnableCustomDepth(true);
+	FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);		
+	FlagMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	FlagMesh->SetCollisionResponseToChannel(ECC_WorldDynamic,ECR_Overlap);
 }
 
 void AFlag::Tick(float DeltaTime)

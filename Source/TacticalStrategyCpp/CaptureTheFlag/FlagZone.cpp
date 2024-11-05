@@ -22,8 +22,7 @@ void AFlagZone::BeginPlay()
 	Super::BeginPlay();
 
 	if(HasAuthority())
-		ZoneSphere->OnComponentBeginOverlap.AddDynamic(this, &AFlagZone::OnSphereOverlap);
-	
+		ZoneSphere->OnComponentBeginOverlap.AddDynamic(this, &AFlagZone::OnSphereOverlap);	
 }
 
 void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

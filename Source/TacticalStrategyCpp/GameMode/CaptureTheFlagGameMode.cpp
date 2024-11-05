@@ -14,8 +14,9 @@ void ACaptureTheFlagGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedC
 
 void ACaptureTheFlagGameMode::FlagCaptured(const class AFlag* Flag, const class AFlagZone* Zone)
 {
-	bool bValidCapture = Flag->GetTeam() != Zone->Team;	
-	if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(GameState))
+	bool bValidCapture = Flag->GetTeam() != Zone->Team;
+	ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(GameState);
+	if(BlasterGameState && bValidCapture)
 	{
 		if(Zone->Team == ETeam::ET_Blue)
 			BlasterGameState->BlueTeamScores();
