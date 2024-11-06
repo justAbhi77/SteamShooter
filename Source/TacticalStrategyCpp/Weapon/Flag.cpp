@@ -26,10 +26,11 @@ AFlag::AFlag():
 
 void AFlag::Dropped()
 {
-	//SetWeaponState(EWeaponState::EWS_Dropped);
+	SetWeaponState(EWeaponState::EWS_Dropped);
 
 	const FDetachmentTransformRules DetachRule(EDetachmentRule::KeepWorld, true);
 	FlagMesh->DetachFromComponent(DetachRule);
+	
 	SetOwner(nullptr);
 	BlasterOwnerCharacter = nullptr;
 	BlasterOwnerController = nullptr;	
@@ -45,12 +46,19 @@ void AFlag::ResetFlag()
 	}
 
 	if(!HasAuthority()) return;
-	Dropped();
+	
+	const FDetachmentTransformRules DetachRule(EDetachmentRule::KeepWorld, true);
+	FlagMesh->DetachFromComponent(DetachRule);
+	
+	SetOwner(nullptr);
+	BlasterOwnerCharacter = nullptr;
+	BlasterOwnerController = nullptr;	
+	
 	SetActorTransform(InitialTransform);
 	
+	SetWeaponState(EWeaponState::EWS_Initial);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	AreaSphere->SetCollisionResponseToChannel (ECC_Pawn, ECR_Overlap);
-	SetWeaponState(EWeaponState::EWS_Initial);
 }
 
 void AFlag::BeginPlay()
@@ -64,11 +72,19 @@ void AFlag::BeginPlay()
 void AFlag::OnEquipped()
 {
 	ShowPickupWidget(false);
+	
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 	FlagMesh->SetSimulatePhysics(false);
 	FlagMesh->SetEnableGravity(false);
-	FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	
+	FlagMesh->SetCollisionResponseToChannels(ECR_Ignore);
 	FlagMesh->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	EnableCustomDepth(false);
 }
 
 void AFlag::OnDropped()
@@ -77,11 +93,15 @@ void AFlag::OnDropped()
 	{
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
+	FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	FlagMesh->SetCollisionResponseToAllChannels(ECR_Block);
+	FlagMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	FlagMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	FlagMesh->SetSimulatePhysics(true);
-	FlagMesh->SetEnableGravity(true);
-	FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);		
-	FlagMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
-	FlagMesh->SetCollisionResponseToChannel(ECC_WorldDynamic,ECR_Overlap);
+	FlagMesh->SetEnableGravity(true);	
+
+	const FDetachmentTransformRules DetachRule(EDetachmentRule::KeepWorld, true);
+	FlagMesh->DetachFromComponent(DetachRule);
 }
 
 void AFlag::Tick(float DeltaTime)

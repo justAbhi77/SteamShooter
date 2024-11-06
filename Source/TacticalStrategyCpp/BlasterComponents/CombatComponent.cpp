@@ -154,6 +154,20 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
+void UCombatComponent::OnRep_TheFlag()
+{
+	if(TheFlag && Character)
+	{
+		TheFlag->SetWeaponState(EWeaponState::EWS_Equipped, true);
+
+		AttachFlagToLeftHand(TheFlag);
+			Character->GetCharacterMovement()->bOrientRotationToMovement = true;
+			Character->bUseControllerRotationYaw = false;
+
+		PlayEquipWeaponSound(TheFlag);
+	}
+}
+
 void UCombatComponent::OnRep_SecondaryWeapon() const
 {
 	if(SecondaryWeapon && Character)
@@ -569,8 +583,13 @@ void UCombatComponent::InitializeCarriedAmmo()
 
 void UCombatComponent::OnRep_HoldingFlag()
 {
-	if(bHoldingFlag && Character && Character->IsLocallyControlled())
-		Character->Crouch();
+	if(bHoldingFlag)
+	{
+		if(Character && Character->IsLocallyControlled())
+			Character->Crouch();
+	}
+	else if(Character && Character->IsLocallyControlled())
+		Character->UnCrouch();		
 }
 
 bool UCombatComponent::ShouldSwapWeapons() const
@@ -660,6 +679,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, Grenades);
 	
 	DOREPLIFETIME(UCombatComponent, bHoldingFlag);
+
+	DOREPLIFETIME(UCombatComponent, TheFlag);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -674,8 +695,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		if(Character->HasAuthority())
 			OnRep_HoldingFlag();
 		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		TheFlag = WeaponToEquip;
 		AttachFlagToLeftHand(WeaponToEquip);
-		WeaponToEquip->SetOwner(Character);		
+		WeaponToEquip->SetOwner(Character);	
+		if(Character->HasAuthority())
+			WeaponToEquip->OnRep_Owner();
 	}
 	else
 	{

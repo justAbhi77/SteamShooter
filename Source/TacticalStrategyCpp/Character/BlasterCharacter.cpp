@@ -97,6 +97,7 @@ ABlasterCharacter::ABlasterCharacter():
 
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AttachedGrenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName(GrenadeSocket));
+	AttachedGrenade->SetCollisionResponseToAllChannels(ECR_Ignore);
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// hit boxes for server side Rewind
@@ -180,13 +181,11 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 	if(Combat)
 	{
 		if(Combat->EquippedWeapon)
-		{
 			DropOrDestroyWeapon(Combat->EquippedWeapon);
-		}
 		if(Combat->SecondaryWeapon)
-		{
 			DropOrDestroyWeapon(Combat->SecondaryWeapon);
-		}
+		if(Combat->TheFlag)
+			DropOrDestroyWeapon(Combat->TheFlag);
 	}
 	Multicast_Elim(bPlayerLeftGame);
 }
@@ -1057,6 +1056,9 @@ void ABlasterCharacter::SetHoldingFlag(const bool bHolding) const
 {
 	if(Combat == nullptr) return;
 	Combat->bHoldingFlag = bHolding;
+	Combat->TheFlag = nullptr;
+	if(HasAuthority())
+		Combat->OnRep_TheFlag();
 }
 
 void ABlasterCharacter::RotateInPlace(const float DeltaTime)

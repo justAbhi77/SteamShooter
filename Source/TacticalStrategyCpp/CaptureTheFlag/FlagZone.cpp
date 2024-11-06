@@ -15,14 +15,15 @@ AFlagZone::AFlagZone():
 
 	ZoneSphere = CreateDefaultSubobject<USphereComponent>(TEXT("ZoneSphere"));
 	SetRootComponent(ZoneSphere);
+	ZoneSphere->SetCollisionResponseToChannels(ECR_Overlap);
 }
 
 void AFlagZone::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(HasAuthority())
-		ZoneSphere->OnComponentBeginOverlap.AddDynamic(this, &AFlagZone::OnSphereOverlap);	
+	ZoneSphere->OnComponentBeginOverlap.AddDynamic(this, &AFlagZone::OnSphereOverlap);
+	ZoneSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
