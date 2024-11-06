@@ -2,6 +2,7 @@
 #include "MenuSystem.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSessionSettings.h"
+#include "OnlineSubsystemUtils.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Online/OnlineSessionNames.h"
 
@@ -10,7 +11,7 @@ AMenuSystem::AMenuSystem():
 	FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this,&ThisClass::OnFindSessionComplete)),
 	JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this,&AMenuSystem::OnJoinSessionComplete))
 {
-	if(const IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
+	if(const IOnlineSubsystem* OnlineSubsystem = Online::GetSubsystem(GetWorld()))
 	{
 		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
 

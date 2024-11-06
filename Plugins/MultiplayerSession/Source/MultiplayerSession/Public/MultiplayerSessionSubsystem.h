@@ -35,7 +35,7 @@ public:
 
 	// Exposed Functions for Menu
 
-	void CreateSession(int32 NumPublicConnections, const EMultiplayerModes& MatchType);
+	void CreateSession(int32 NumPublicConnections, EMultiplayerModes MatchType);
 
 	void FindSessions(int32 MaxSearchResults);
 
@@ -59,7 +59,7 @@ public:
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;	
 
 	int32 DesiredNumPublicConnections{0};
-	EMultiplayerModes DesiredMatchType{};
+	EMultiplayerModes DesiredMatchType = EMultiplayerModes::EMM_Teams;
 	
 protected:
 	void OnCreateSessionComplete (FName SessionName, bool bWasSuccessful);
@@ -95,5 +95,5 @@ private:
 
 	bool bCreateSessionOnDestroy{ false };
 	int32 LastNumPublicConnections;
-	EMultiplayerModes LastMatchType;
+	EMultiplayerModes LastMatchType = EMultiplayerModes::EMM_Teams;
 };

@@ -29,4 +29,7 @@ public:
 	FString CaptureFlagMapPath;
 
 	FTimerHandle PostLoginWaitTime;
+	
+	UPROPERTY(EditAnywhere);
+	float LobbyWaitTime = 20;
 };

@@ -22,7 +22,7 @@ UMultiplayerSessionSubsystem::UMultiplayerSessionSubsystem():
 	}
 }
 
-void UMultiplayerSessionSubsystem::CreateSession(const int32 NumPublicConnections, const EMultiplayerModes& MatchType)
+void UMultiplayerSessionSubsystem::CreateSession(const int32 NumPublicConnections, EMultiplayerModes MatchType)
 {
 	DesiredNumPublicConnections = NumPublicConnections;
 	DesiredMatchType = MatchType;
