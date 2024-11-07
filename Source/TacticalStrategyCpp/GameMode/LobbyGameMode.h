@@ -32,4 +32,10 @@ public:
 	
 	UPROPERTY(EditAnywhere);
 	float LobbyWaitTime = 20;
+
+	UPROPERTY()
+	class UMultiplayerSessionSubsystem* MultiplayerSubsystem;	
+
+	UFUNCTION()
+	void StartMatch();
 };

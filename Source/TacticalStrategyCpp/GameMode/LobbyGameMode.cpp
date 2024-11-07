@@ -12,8 +12,6 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 	if(PostLoginWaitTime.IsValid())
 		PostLoginWaitTime.Invalidate();
-
-	UMultiplayerSessionSubsystem* MultiplayerSubsystem;	
 	
 	// if the user wants to have control over the number of players in the match.
 	if(UGameInstance* GameInstance = GetGameInstance())
@@ -22,38 +20,9 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		check(MultiplayerSubsystem);
 
 		MultiplayerSubsystem->DesiredNumPublicConnections;
-	}
+	}	
 	
-	
-	GetWorldTimerManager().SetTimer(PostLoginWaitTime, [&]
-	{
-		if(UWorld* World = GetWorld())
-		{
-			bUseSeamlessTravel = true;
-			FString MainGameMapPath{};
-			EMultiplayerModes MatchType = EMultiplayerModes::EMM_Teams;
-
-			if(MultiplayerSubsystem)
-				MatchType = MultiplayerSubsystem->DesiredMatchType;
-			
-			if(MatchType == EMultiplayerModes::EMM_FreeForAll)
-				MainGameMapPath = FreeForAllMapPath;
-			else if (MatchType == EMultiplayerModes::EMM_Teams)
-				MainGameMapPath = TeamsMapPath;
-			else if (MatchType == EMultiplayerModes::EMM_CaptureFlag)
-				MainGameMapPath = CaptureFlagMapPath;
-			else
-				MainGameMapPath = FreeForAllMapPath;
-			
-			MainGameMapPath = FString::Printf(TEXT("%s?listen"), *MainGameMapPath);
-
-			if(GEngine)
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red,
-					FString::Printf(TEXT("loading level %s"), *MainGameMapPath));
-			
-			World->ServerTravel(FString(MainGameMapPath));
-		}
-	}, LobbyWaitTime, false);
+	GetWorldTimerManager().SetTimer(PostLoginWaitTime, this, &ALobbyGameMode::StartMatch, LobbyWaitTime);
 
 	if(GameState)
 	{
@@ -85,5 +54,42 @@ void ALobbyGameMode::Logout(AController* Exiting)
 			GEngine->AddOnScreenDebugMessage(-1,60.f,FColor::Cyan,
 					FString::Printf(TEXT("%s has exited the game"), *PlayerName));
 		}
+	}
+}
+
+void ALobbyGameMode::StartMatch()
+{
+	if(MultiplayerSubsystem == nullptr)
+		if(UGameInstance* GameInstance = GetGameInstance())
+		{
+			MultiplayerSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionSubsystem>();
+			check(MultiplayerSubsystem);
+		}
+	
+	if(UWorld* World = GetWorld())
+	{
+		bUseSeamlessTravel = true;
+		FString MainGameMapPath{};
+		EMultiplayerModes MatchType = EMultiplayerModes::EMM_Teams;
+
+		if(MultiplayerSubsystem)
+			MatchType = MultiplayerSubsystem->DesiredMatchType;
+			
+		if(MatchType == EMultiplayerModes::EMM_FreeForAll)
+			MainGameMapPath = FreeForAllMapPath;
+		else if (MatchType == EMultiplayerModes::EMM_Teams)
+			MainGameMapPath = TeamsMapPath;
+		else if (MatchType == EMultiplayerModes::EMM_CaptureFlag)
+			MainGameMapPath = CaptureFlagMapPath;
+		else
+			MainGameMapPath = FreeForAllMapPath;
+			
+		MainGameMapPath = FString::Printf(TEXT("%s?listen"), *MainGameMapPath);
+
+		if(GEngine)
+			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red,
+				FString::Printf(TEXT("loading level %s"), *MainGameMapPath));
+			
+		World->ServerTravel(FString(MainGameMapPath));
 	}
 }
