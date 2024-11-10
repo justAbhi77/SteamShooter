@@ -154,9 +154,7 @@ void UBuffComponent::MulticastJumpBuff_Implementation(float JumpVelocity)
 {
 	// Applies jump buff to all clients
 	if(UCharacterMovementComponent* MovementComponent = Character->GetCharacterMovement())
-	{
 		MovementComponent->JumpZVelocity = JumpVelocity;
-	}
 }
 
 void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
