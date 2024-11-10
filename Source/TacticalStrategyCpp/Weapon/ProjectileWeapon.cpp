@@ -31,10 +31,10 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 	UWorld* World = GetWorld();
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName));
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetSkeletalWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName));
 	if(World && MuzzleFlashSocket)
 	{
-		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetSkeletalWeaponMesh());
 		// from muzzle flash socket(gun) to world hit location (blocking mesh) 
 		const FVector ToTarget = HitTarget - SocketTransform.GetLocation();
 		const FRotator TargetRotation = ToTarget.Rotation();

@@ -9,21 +9,14 @@
 #include "MultiplayerSessionSubsystem.generated.h"
 
 // Multicast Delegate (Event Dispatchers)
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
-
-// Not compatible with blueprints
 DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
-
-// Not compatible with blueprints
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result);
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessful);
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessful);
 
 /**
- * 
+ * Subsystem responsible for handling online session actions like creating, finding, joining, destroying, and starting sessions.
  */
 UCLASS()
 class MULTIPLAYERSESSION_API UMultiplayerSessionSubsystem : public UGameInstanceSubsystem
@@ -33,67 +26,54 @@ class MULTIPLAYERSESSION_API UMultiplayerSessionSubsystem : public UGameInstance
 public:
 	UMultiplayerSessionSubsystem();
 
-	// Exposed Functions for Menu
-
+	// Public session management functions
 	void CreateSession(int32 NumPublicConnections, EMultiplayerModes MatchType);
-
 	void FindSessions(int32 MaxSearchResults);
-
 	void JoinSession(const FOnlineSessionSearchResult& SessionResult);
-
 	void DestroySession();
-
 	void StartSession();
 
-	/**
-	 * Custom Delegates for menu class (Event Dispatchers)
-	 */
+	// Delegates for broadcasting session events
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
-
 	FMultiplayerOnFindSessionsComplete MultiplayerOnFindSessionsComplete;
-
 	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
-
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
+	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 
-	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;	
-
-	int32 DesiredNumPublicConnections{0};
-	EMultiplayerModes DesiredMatchType = EMultiplayerModes::EMM_Teams;
-	
 protected:
-	void OnCreateSessionComplete (FName SessionName, bool bWasSuccessful);
-	
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionsComplete(bool bWasSuccessful);
-	
-	void OnJoinSessionComplete (FName SessionName, EOnJoinSessionCompleteResult:: Type Result);
-	
-	void OnDestroySessionComplete (FName SessionName, bool bWasSuccessful);
-	
-	void OnStartSessionComplete (FName SessionName, bool bWasSuccessful);
-	
+	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);	
+	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
+
 private:
+	// ReSharper disable once CppBoundToDelegateMethodIsNotMarkedAsUFunction
+	// Session interface to handle online session actions
 	IOnlineSessionPtr SessionInterface;
 
+	// Last session settings and search data
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 
+	// Delegate handles
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
-
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
 	FDelegateHandle FindSessionsCompleteDelegateHandle;
-	
 	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 	FDelegateHandle JoinSessionCompleteDelegateHandle;
-	
 	FOnDestroySessionCompleteDelegate DestroySessionCompleteDelegate;
 	FDelegateHandle DestroySessionCompleteDelegateHandle;
-	
 	FOnStartSessionCompleteDelegate StartSessionCompleteDelegate;
 	FDelegateHandle StartSessionCompleteDelegateHandle;
 
-	bool bCreateSessionOnDestroy{ false };
-	int32 LastNumPublicConnections;
-	EMultiplayerModes LastMatchType = EMultiplayerModes::EMM_Teams;
+	// Variables for managing session re-creation
+	bool bCreateSessionOnDestroy = false;
+	int32 LastNumPublicConnections = 0, DesiredNumPublicConnections = 0;
+	EMultiplayerModes LastMatchType = EMultiplayerModes::Emm_Teams, DesiredMatchType = EMultiplayerModes::Emm_Teams;
+
+public:
+	FORCEINLINE int GetDesiredNumPublicConnections() const { return DesiredNumPublicConnections; }
+	FORCEINLINE EMultiplayerModes GetDesiredMatchType() const { return DesiredMatchType; }
 };

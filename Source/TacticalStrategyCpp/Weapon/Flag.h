@@ -35,4 +35,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	FORCEINLINE FTransform GetInitialTransform() const { return InitialTransform; }
+
+	virtual UStaticMeshComponent* GetStaticWeaponMesh() const override { return FlagMesh; }
 };

@@ -192,8 +192,8 @@ void AWeapon::OnRep_WeaponState()
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 		}
-		GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
-		GetWeaponMesh()->MarkRenderStateDirty();
+		GetSkeletalWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		GetSkeletalWeaponMesh()->MarkRenderStateDirty();
 		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) :
 			BlasterOwnerCharacter;
 		if(BlasterOwnerCharacter && bUseServerSideRewind)
@@ -327,9 +327,9 @@ void AWeapon::Fire(const FVector& HitTarget)
 	}
 	if(CasingClass)
 	{
-		if(const USkeletalMeshSocket* AmmoEjectSocket = GetWeaponMesh()->GetSocketByName(FName(AmmoEjectFlashSocketName)))
+		if(const USkeletalMeshSocket* AmmoEjectSocket = GetSkeletalWeaponMesh()->GetSocketByName(FName(AmmoEjectFlashSocketName)))
 		{
-			const FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(GetWeaponMesh());
+			const FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(GetSkeletalWeaponMesh());
 			// from muzzle flash socket(gun) to world hit location (blocking mesh) 
 			// const FVector ToTarget = HitTarget - SocketTransform.GetLocation();		
 			
@@ -356,10 +356,10 @@ void AWeapon::Dropped()
 
 FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget) const
 {
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName));
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetSkeletalWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName));
 	if(MuzzleFlashSocket == nullptr) return FVector();
 	
-	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetSkeletalWeaponMesh());
 	const FVector TraceStart = SocketTransform.GetLocation();
 	
 	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal(),

@@ -26,9 +26,9 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 	AController* InstigatorController = OwnerPawn->GetController();
 
-	if(const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName)))
+	if(const USkeletalMeshSocket* MuzzleFlashSocket = GetSkeletalWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName)))
 	{
-		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetSkeletalWeaponMesh());
 
 		const FVector Start = SocketTransform.GetLocation();
 		

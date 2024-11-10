@@ -70,8 +70,8 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 
 	AoYaw = BlasterCharacter->GetAoYaw();
 	AoPitch = BlasterCharacter->GetAoPitch();
-
-	if(bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && BlasterCharacter->GetMesh())
+	
+	if(bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetSkeletalWeaponMesh() && BlasterCharacter->GetMesh())
 	{
 		//LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName(""), RTS_World);
 		// Extra function for ease of use with different weapons
@@ -90,7 +90,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 		if(BlasterCharacter->IsLocallyControlled())
 		{
 			bIsLocallyControlled = true;
-			const FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(
+			const FTransform RightHandTransform = EquippedWeapon->GetSkeletalWeaponMesh()->GetSocketTransform(
 				WeaponGrabbingBoneName, RTS_World);
 			const FVector RightHandWorldLocation = RightHandTransform.GetLocation();
 
@@ -108,7 +108,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(const float DeltaSeconds)
 	bUseLeftHandIk = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
 
 	if(BlasterCharacter->IsLocallyControlled() && BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade
-		&& BlasterCharacter->bFinishedSwapping)
+		&& BlasterCharacter->GetFinishedSwapping())
 		bUseLeftHandIk = !BlasterCharacter->IsLocallyReloading();
 	
 	bUseRightHandIk = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied &&

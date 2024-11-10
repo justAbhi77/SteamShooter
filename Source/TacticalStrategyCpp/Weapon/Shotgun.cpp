@@ -31,9 +31,9 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 	if(OwnerPawn == nullptr) return;
 
 	AController* InstigatorController = OwnerPawn->GetController();
-	if(const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName)))
+	if(const USkeletalMeshSocket* MuzzleFlashSocket = GetSkeletalWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName)))
 	{
-		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetSkeletalWeaponMesh());
 
 		const FVector Start = SocketTransform.GetLocation();
 		
@@ -110,10 +110,10 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& HitTargets) const
 {
 	// same as trace end with scatter for normal weapons since there are multiple pellets in a shotgun
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName));
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetSkeletalWeaponMesh()->GetSocketByName(FName(MuzzleFlashSocketName));
 	if(MuzzleFlashSocket == nullptr) return;
 	
-	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetSkeletalWeaponMesh());
 	const FVector TraceStart = SocketTransform.GetLocation();
 	
 	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal(),

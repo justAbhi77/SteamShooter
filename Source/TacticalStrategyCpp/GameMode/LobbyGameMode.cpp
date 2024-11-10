@@ -19,7 +19,7 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		MultiplayerSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionSubsystem>();
 		check(MultiplayerSubsystem);
 
-		MultiplayerSubsystem->DesiredNumPublicConnections;
+		// MultiplayerSubsystem->GetDesiredNumPublicConnections();
 	}	
 	
 	GetWorldTimerManager().SetTimer(PostLoginWaitTime, this, &ALobbyGameMode::StartMatch, LobbyWaitTime);
@@ -70,16 +70,16 @@ void ALobbyGameMode::StartMatch()
 	{
 		bUseSeamlessTravel = true;
 		FString MainGameMapPath{};
-		EMultiplayerModes MatchType = EMultiplayerModes::EMM_Teams;
+		EMultiplayerModes MatchType = EMultiplayerModes::Emm_Teams;
 
 		if(MultiplayerSubsystem)
-			MatchType = MultiplayerSubsystem->DesiredMatchType;
+			MatchType = MultiplayerSubsystem->GetDesiredMatchType();
 			
-		if(MatchType == EMultiplayerModes::EMM_FreeForAll)
+		if(MatchType == EMultiplayerModes::Emm_FreeForAll)
 			MainGameMapPath = FreeForAllMapPath;
-		else if (MatchType == EMultiplayerModes::EMM_Teams)
+		else if (MatchType == EMultiplayerModes::Emm_Teams)
 			MainGameMapPath = TeamsMapPath;
-		else if (MatchType == EMultiplayerModes::EMM_CaptureFlag)
+		else if (MatchType == EMultiplayerModes::Emm_CaptureFlag)
 			MainGameMapPath = CaptureFlagMapPath;
 		else
 			MainGameMapPath = FreeForAllMapPath;

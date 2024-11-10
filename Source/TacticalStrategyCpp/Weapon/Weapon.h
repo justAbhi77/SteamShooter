@@ -214,7 +214,9 @@ private:
 public:
 	void SetWeaponState(const EWeaponState State, const bool bUpdateLocally = false);
 
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE virtual USkeletalMeshComponent* GetSkeletalWeaponMesh() const { return WeaponMesh; }
+	
+	FORCEINLINE virtual UStaticMeshComponent* GetStaticWeaponMesh() const { return nullptr; }
 
 	FTransform GetWeaponSocketLeftHand() const;
 
