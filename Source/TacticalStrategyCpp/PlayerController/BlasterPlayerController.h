@@ -5,10 +5,12 @@
 #include "TacticalStrategyCpp/Enums/Team.h"
 #include "BlasterPlayerController.generated.h"
 
+// Delegate for notifying when the player's ping is too high
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
 
 /**
- * 
+ * Responsible for managing HUD updates, server time synchronization,
+ * team selection, match state handling, and handling high ping warnings.
  */
 UCLASS()
 class TACTICALSTRATEGYCPP_API ABlasterPlayerController : public APlayerController
@@ -17,171 +19,149 @@ class TACTICALSTRATEGYCPP_API ABlasterPlayerController : public APlayerControlle
 	
 public:
 	ABlasterPlayerController();
-	
+
+	// HUD Management functions
+	void GetBlasterHud();
 	void SetHudHealth(float Health, float MaxHealth);
 	void SetHudShield(float Shield, float MaxShield);
-	
 	void SetHudScore(float Score);
-
 	void SetHudDefeats(int32 Defeats);
-	
 	void SetHudWeaponAmmo(int32 Ammo);
-	
 	void SetHudCarriedAmmo(int32 Ammo);
-
 	void SetHudMatchCountDown(const float CountDownTime);
-
 	void SetHudAnnouncementCountDown(const float CountdownTime);
-
 	void SetHudGrenades(int32 Grenades);
+	void ShowReturnToMenu();
 
+	// Player event functions
 	virtual void OnPossess(APawn* InPawn) override;
-
 	virtual void Tick(float DeltaSeconds) override;
+	void PollInit();
+	virtual void ReceivedPlayer() override;
 
-	/*
-	 * Time on the Server. This is synced up with server
-	 */
+	// Server time syncing functions
 	virtual float GetServerTime();
 	void SendReqSyncServerTime();
 
-	virtual void ReceivedPlayer() override;
-
+	// Match state and team management
 	void OnMatchStateSet(FName State, bool bisTeamsMatch = false);
-
 	void HandleCooldown();
-	
 	void HandleTeamSelection();
+
+	// Ping handling functions
+	void CheckPing(float DeltaSeconds);
+	void HighPingWarning();
+	void StopHighPingWarning();
+	float SingleTripTime = 0;
+
+	// Game setup functions
+	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
+	void SetTeamScoreVisibility(bool bIsVisible);
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHudRedTeamScore(int32 RedScore);
+	void SetHudBlueTeamScore(int32 BlueScore);
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	float SingleTripTime = 0;
-
+	// Delegate for high ping warnings
 	FHighPingDelegate HighPingDelegate;
 
-	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
-
-	void HideTeamScores();
-
-	void InitTeamScores();
-
-	void SetHudRedTeamScore(int32 RedScore);
-	void SetHudBlueTeamScore(int32 BlueScore);
-	
-protected:	
+protected:
 	virtual void BeginPlay() override;
-
 	virtual void SetupInputComponent() override;
 
 	void SetHudTime();
 
-	// Time Syncing between Server and clients
-
-	/*
-	 * Requests the server for its time, passing the clients time
-	 */
+	// Server-to-client communication for time synchronization
 	UFUNCTION(Server, Reliable)
 	void Server_RequestServerTime(float TimeOfClientRequest);
-
-	/*
-	 * Reply to the client with the time, passing the clients request time as well
-	 */
-	UFUNCTION(Client , Reliable)
+	UFUNCTION(Client, Reliable)
 	void Client_ReportServerTime(float TimeOfClientRequest, float TimeOfServerReceivedClientRequest);
 
-	/*
-	 * The time difference between server and client
-	 */
-	float ClientServerDelta;
-
-	UPROPERTY(EditAnywhere, Category = Time)
-	float TimeSyncFrequency;
-
-	void PollInit();
-
+	// Match state and team setup functions
 	UFUNCTION(Server, Reliable)
 	void ServerCheckMatchState();
-
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidGame(const FName StateOfMatch, const float WarmUp, const float Match,
 		const float StartingTime, const float Cooldown);
 
-	void CheckPing(float DeltaSeconds);
-	void HighPingWarning();
-	void StopHighPingWarning();
+	// Ping reporting to the server
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHighPing);
 
-	void ShowReturnToMenu();
+	// Functions to handle team selection changes
+	UFUNCTION()
+	void OnTeamSelectionChanged(ETeam NewTeam);
+	UFUNCTION(Server, Reliable)
+	void Server_OnTeamSelectionChanged(const ETeam NewTeam);
 
+	// Function to handle match state replication
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	// Event to handle HUD announcements for eliminations
 	UFUNCTION(Client, Reliable)
 	void Client_ElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 
-	UFUNCTION()
-	void OnTeamSelectionChanged(ETeam NewTeam);
-
-	UFUNCTION(Server, Reliable)
-	void Server_OnTeamSelectionChanged(const ETeam NewTeam);	
-
+	// Event handler for team match state replication
 	UFUNCTION()
 	void OnRep_TeamsMatch();
-	
-	UPROPERTY(ReplicatedUsing = OnRep_TeamsMatch)
-	bool bTeamsMatch = false;
 
-	FString GetInfoText(const TArray<class ABlasterPlayerState*>& Players,
-		const ABlasterPlayerState* BlasterPlayerState);
-
-	FString GetTeamsInfoText(const class ABlasterGameState* BlasterGameState);
-	
 private:
+	// Pointers to other game elements (HUD and Game Mode)
 	UPROPERTY()
 	class ABlasterHud* BlasterHud;
-
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
-
-	float MatchTime, WarmUpTime, LevelStartingTime, CooldownTime;
-
-	uint32 CountDownInt;
-
-	UFUNCTION()
-	void OnRep_MatchState();
-	
-	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
-	FName MatchState;
-
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
 
-	float HudHealth, HudMaxHealth, HudScore, HudShield, HudMaxShield, HudCarriedAmmo, HudWeaponAmmo,
-		HighPingRunningTime = 0, PingAnimationRunningTime = 0;
+	// HUD values (for polling data until hud is initialized)
+	float HudHealth, HudMaxHealth, HudScore, HudShield, HudMaxShield, HudCarriedAmmo, HudWeaponAmmo;
 	int32 HudDefeats, HudGrenades;
 
-	bool bInitializeHealth = false, bInitializeScore = false, bInitializeDefeats = false, bInitializeGrenades = false,
-		bInitializeShields = false, bInitializeCarriedAmmo = false, bInitializeWeaponAmmo = false;
+	// Values for time management
+	float MatchTime, WarmUpTime, LevelStartingTime, CooldownTime;
+	uint32 CountDownInt;
 
+	// Player ping handling variables
 	UPROPERTY(EditAnywhere)
 	float HighPingDuration = 5;
-	
 	UPROPERTY(EditAnywhere)
 	float CheckPingFrequency = 20;
-
-	UFUNCTION(Server, Reliable)
-	void ServerReportPingStatus(bool bHighPing);
-	
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold = 50;
+	float HighPingRunningTime = 0, PingAnimationRunningTime = 0;
 
+	// Time synchronization between client and server
+	UPROPERTY(EditAnywhere, Category = Time)
+	float TimeSyncFrequency;
+	float ClientServerDelta;
+
+	// State management for HUD initialization
+	bool bInitializeHealth = false, bInitializeScore = false, bInitializeDefeats = false, bInitializeGrenades = false, bInitializeShields = false, bInitializeCarriedAmmo = false, bInitializeWeaponAmmo = false;
+
+	// Match and team management variables
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+	UPROPERTY(ReplicatedUsing = OnRep_TeamsMatch)
+	bool bTeamsMatch = false;
+
+	// UI Widgets for in-game menus and team selection
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
 	TSubclassOf<class UUserWidget> WReturnToMenu;
-
 	UPROPERTY()
 	class UReturnToMainMenu* WbpReturnToMenu;
-	
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
 	TSubclassOf<class UUserWidget> WTeamSelection;
-	
 	UPROPERTY()
 	class UTeamSelection* WbpTeamSelection;
 
+	// Player state management
 	bool bReturnToMenuOpen = false, bHasSelectedTeam = false;
+
+	// Utility functions for displaying team and player info on the HUD
+	FString GetInfoText(const TArray<class ABlasterPlayerState*>& Players, const ABlasterPlayerState* BlasterPlayerState);
+	FString GetTeamsInfoText(const class ABlasterGameState* BlasterGameState);
 };
