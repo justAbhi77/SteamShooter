@@ -6,13 +6,8 @@
 
 AShieldPickup::AShieldPickup()
 {
-	PrimaryActorTick.bCanEverTick = true;
-}
-
-void AShieldPickup::BeginPlay()
-{
-	Super::BeginPlay();
-	
+	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 }
 
 void AShieldPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -20,19 +15,11 @@ void AShieldPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AA
 {
 	Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 	
+	// Check if the overlapping actor is a valid BlasterCharacter
 	if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
-	{
-		OverlappedActor = OtherActor;
+		// Retrieve the character's buff component and buff jumping
 		if(UBuffComponent* BuffComponent = BlasterCharacter->GetBuffComponent())
-		{
 			BuffComponent->ReplenishShield(ShieldReplenishAmount, ShieldReplenishTime);
-		}
-	}
+	
 	Destroy();
 }
-
-void AShieldPickup::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-

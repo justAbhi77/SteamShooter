@@ -6,6 +6,10 @@
 #include "TacticalStrategyCpp/Weapon/WeaponTypes.h"
 #include "AmmoPickup.generated.h"
 
+/**
+ * Represents an ammo pickup item in the game world.
+ * Inherits from APickup and adds specific functionality to replenish ammo for a player.
+ */
 UCLASS()
 class TACTICALSTRATEGYCPP_API AAmmoPickup : public APickup
 {
@@ -15,20 +19,19 @@ public:
 	AAmmoPickup();
 
 protected:
-	virtual void BeginPlay() override;
-
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
 private:
-	UPROPERTY(VisibleAnywhere)
+	// Component for continuous rotation of the pickup item for visual effect
+	UPROPERTY(VisibleAnywhere, Category = Components)
 	class URotatingMovementComponent* Rotation;
-	
-	UPROPERTY(EditAnywhere)
-	int32 AmmoAmount;
 
-	UPROPERTY(EditAnywhere)
+	// The specific type of ammo this pickup item supplies (e.g., for rifles, pistols, etc.)
+	UPROPERTY(EditAnywhere, Category="Pickup Properties")
 	EWeaponType AmmoType;
-public:
-	virtual void Tick(float DeltaTime) override;
+	
+	// Amount of ammo this pickup provides
+	UPROPERTY(EditAnywhere, Category="Pickup Properties")
+	int32 AmmoAmount = 0;
 };

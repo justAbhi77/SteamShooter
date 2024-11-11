@@ -12,9 +12,8 @@ class TACTICALSTRATEGYCPP_API APickup : public AActor
 
 public:
 	APickup();
-	
-	virtual void Tick(float DeltaTime) override;
 
+	// Play sound and particle system when destroyed
 	virtual void Destroyed() override;
 
 protected:
@@ -24,28 +23,32 @@ protected:
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	// Actor that overlaps with this pickup
 	UPROPERTY()
 	AActor* OverlappedActor;
 
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Components")
 	class USphereComponent* OverlapSphere;
-	
-	UPROPERTY(EditAnywhere)
+
+	// Sound to play when pickup is collected
+	UPROPERTY(EditAnywhere, Category="Audio")
 	class USoundCue* PickupSound;
 
-	UPROPERTY(EditAnywhere)
-	class UStaticMeshComponent* PickupMesh;	
+	// Mesh for visual representation of the pickup
+	UPROPERTY(EditAnywhere, Category="Components")
+	class UStaticMeshComponent* PickupMesh;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category="Effects")
 	class UNiagaraComponent* PickupEffectComponent;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Effects")
 	class UNiagaraSystem* PickupEffect;
 
+	// Timer to handle delay before enabling overlap events
 	FTimerHandle BindOverlapTimer;
-
+	// Delay time for enabling overlap after spawn
 	float BindOverlapTime = 0.25f;
-
+	// Called when BindOverlapTimer finishes to enable overlap binding
 	void BindOverlapTimerFinished();
 };

@@ -6,14 +6,8 @@
 
 AHealthPickup::AHealthPickup()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
-}
-
-void AHealthPickup::BeginPlay()
-{
-	Super::BeginPlay();
-	
 }
 
 void AHealthPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -21,19 +15,13 @@ void AHealthPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AA
 {
 	Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 	
+	// Check if the overlapping actor is a valid BlasterCharacter
 	if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
-	{
-		OverlappedActor = OtherActor;
+		// Retrieve the character's buff component and add health
 		if(UBuffComponent* BuffComponent = BlasterCharacter->GetBuffComponent())
-		{
 			BuffComponent->Heal(HealAmount, HealingTime);
-		}
-	}
+	
+	// Destroy the pickup after use
 	Destroy();
-}
-
-void AHealthPickup::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 

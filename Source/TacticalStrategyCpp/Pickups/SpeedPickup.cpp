@@ -6,13 +6,8 @@
 
 ASpeedPickup::ASpeedPickup()
 {
-	PrimaryActorTick.bCanEverTick = true;
-}
-
-void ASpeedPickup::BeginPlay()
-{
-	Super::BeginPlay();
-	
+	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 }
 
 void ASpeedPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -20,19 +15,11 @@ void ASpeedPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 {
 	Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 	
+	// Check if the overlapping actor is a valid BlasterCharacter
 	if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
-	{
-		OverlappedActor = OtherActor;
+		// Retrieve the character's buff component and buff speed
 		if(UBuffComponent* BuffComponent = BlasterCharacter->GetBuffComponent())
-		{
 			BuffComponent->BuffSpeed(BaseSpeedBuff, CrouchSpeedBuff, SpeedBuffTime);
-		}
-	}
+			
 	Destroy();
 }
-
-void ASpeedPickup::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
