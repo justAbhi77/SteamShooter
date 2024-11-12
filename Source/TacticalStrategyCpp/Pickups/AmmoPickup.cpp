@@ -5,7 +5,7 @@
 #include "TacticalStrategyCpp/Character/BlasterCharacter.h"
 
 AAmmoPickup::AAmmoPickup() :
-	Rotation(nullptr), AmmoAmount(30), AmmoType(EWeaponType::EWT_MAX)
+	Rotation(nullptr), AmmoType(EWeaponType::EWT_MAX), AmmoAmount(30)
 {
 	PrimaryActorTick.bCanEverTick = false;
 

@@ -12,16 +12,16 @@
 #include "TacticalStrategyCpp/PlayerController/BlasterPlayerController.h"
 
 AWeapon::AWeapon():
-	MuzzleFlashSocketName("MuzzleFlash"),
 	bIsAutomatic(true),
 	FireDelay(0.15f),
+	MagCapacity(30),
+	MuzzleFlashSocketName("MuzzleFlash"),
 	ZoomedFov(30.f),
 	ZoomedInterpSpeed(20.f),
-	Ammo(30),
-	MagCapacity(30),
 	DistanceToSphere(800),
 	SphereRadius(75),
 	WeaponState(EWeaponState::EWS_Initial),
+	Ammo(30),
 	LeftHandSocketName("LeftHandSocket"), AmmoEjectFlashSocketName("AmmoEject")
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -298,11 +298,6 @@ bool AWeapon::IsEmpty() const
 bool AWeapon::IsFull() const
 {
 	return Ammo == MagCapacity;
-}
-
-void AWeapon::Tick(const float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void AWeapon::ShowPickupWidget(const bool bShowWidget) const
