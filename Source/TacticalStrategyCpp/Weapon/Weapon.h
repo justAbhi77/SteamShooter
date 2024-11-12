@@ -145,6 +145,8 @@ protected:
 
 	virtual void OnEquipped();
 
+	virtual void OnEquippedSecondary();
+
 	virtual void OnDropped();
 	
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
