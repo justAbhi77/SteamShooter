@@ -14,27 +14,31 @@ class TACTICALSTRATEGYCPP_API AFlag : public AWeapon
 public:
 	AFlag();
 
+	// Function to handle dropping the flag
 	virtual void Dropped() override;
 
+	// Resets the flag to its initial state
 	void ResetFlag();
 
 protected:
 	virtual void BeginPlay() override;
 
+	// Function to handle actions when flag is equipped
 	virtual void OnEquipped() override;
-	
+
+	// Function to handle actions when flag is dropped
 	virtual void OnDropped() override;
 
 private:
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* FlagMesh;
 
+	// Initial transform to reset flag position
 	FTransform InitialTransform;
 
 public:
-	virtual void Tick(float DeltaTime) override;
-
 	FORCEINLINE FTransform GetInitialTransform() const { return InitialTransform; }
 
+	// Returns the static mesh for the flag (override from Weapon)
 	virtual UStaticMeshComponent* GetStaticWeaponMesh() const override { return FlagMesh; }
 };
