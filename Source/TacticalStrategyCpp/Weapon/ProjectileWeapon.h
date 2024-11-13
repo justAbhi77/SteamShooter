@@ -6,6 +6,9 @@
 #include "Weapon.h"
 #include "ProjectileWeapon.generated.h"
 
+/**
+ * Weapon class that fires projectiles.
+ */
 UCLASS()
 class TACTICALSTRATEGYCPP_API AProjectileWeapon : public AWeapon
 {
@@ -13,18 +16,20 @@ class TACTICALSTRATEGYCPP_API AProjectileWeapon : public AWeapon
 
 public:
 	AProjectileWeapon();
-	
-	virtual void Tick(float DeltaTime) override;
 
+	/**
+	 * Overrides the Fire function to spawn and launch projectiles toward the target.
+	 * 
+	 * @param HitTarget - Location to fire the projectile toward.
+	 */
 	virtual void Fire(const FVector& HitTarget) override;
 
-protected:
-	virtual void BeginPlay() override;
-
 private:
-	UPROPERTY(EditAnywhere)
+	// Class of the projectile to spawn when firing.
+	UPROPERTY(EditAnywhere, Category = "Projectile Settings")
 	TSubclassOf<class AProjectile> ProjectileClass;
-	
-	UPROPERTY(EditAnywhere)
+
+	// Projectile class used when server-side rewind is enabled.
+	UPROPERTY(EditAnywhere, Category = "Projectile Settings")
 	TSubclassOf<AProjectile> ServerSideRewindProjectileClass;
 };

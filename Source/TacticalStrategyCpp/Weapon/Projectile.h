@@ -24,7 +24,7 @@ public:
 	FVector_NetQuantize TraceStart;
 
 	// Initial velocity for the projectile
-	FVector_NetQuantize100 InitializeVelocity;
+	FVector_NetQuantize100 InitialVelocity;
 
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000;
