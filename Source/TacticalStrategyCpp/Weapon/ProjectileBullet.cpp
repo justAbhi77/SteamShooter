@@ -66,7 +66,7 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 				OwnerCharacter->IsLocallyControlled())
 			{
 				OwnerCharacter->GetLagCompensation()->ProjectileServerScoreRequest(HitCharacter, TraceStart,
-					InitializeVelocity, OwnerController->GetServerTime() - OwnerController->SingleTripTime);
+					InitialVelocity, OwnerController->GetServerTime() - OwnerController->SingleTripTime);
 			}
 		}
 	}
