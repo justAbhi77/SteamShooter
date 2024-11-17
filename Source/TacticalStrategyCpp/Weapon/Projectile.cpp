@@ -14,7 +14,7 @@ AProjectile::AProjectile() :
 	OuterRadius(500),
 	DamageFallOf(1.0f) // Linear falloff
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));

@@ -727,8 +727,8 @@ void ABlasterCharacter::AimButtonReleased()
 // Handles grenade throwing when grenade button is pressed
 void ABlasterCharacter::GrenadeButtonPressed()
 {
-	if(Combat && !Combat->bHoldingFlag)
-		Combat->ThrowGrenade();
+	if(bDisableGameplay || Combat == nullptr || Combat->bHoldingFlag) return;
+	Combat->ThrowGrenade();
 }
 
 // Calculates the aim offset pitch

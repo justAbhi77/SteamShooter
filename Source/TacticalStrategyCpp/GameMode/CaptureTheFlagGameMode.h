@@ -16,5 +16,7 @@ class TACTICALSTRATEGYCPP_API ACaptureTheFlagGameMode : public ABlasterTeamsGame
 	GENERATED_BODY()
 	
 public:
+	virtual void PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController) override;
+
 	void FlagCaptured(const class AFlag* Flag, const class AFlagZone* Zone) const;
 };

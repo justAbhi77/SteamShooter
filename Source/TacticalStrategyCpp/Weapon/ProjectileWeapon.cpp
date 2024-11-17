@@ -56,16 +56,19 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		    ChosenProjectile = ProjectileClass;
 		    bChosenServerSideRewind = false;
 		}		
-		
-		AProjectile* SpawnedProjectile = World->SpawnActor<AProjectile>(ChosenProjectile, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-		SpawnedProjectile->bUseServerSideRewind = bChosenServerSideRewind;
-		SpawnedProjectile->Damage = Damage;
-		SpawnedProjectile->HeadShotDamage = HeadShotDamage;
-		
-		if(bUseServerSideRewind && !bServer && !bLocallyControlled)
+
+		if (ChosenProjectile)
 		{
-			SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
-			SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
+			AProjectile* SpawnedProjectile = World->SpawnActor<AProjectile>(ChosenProjectile, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
+			SpawnedProjectile->bUseServerSideRewind = bChosenServerSideRewind;
+			SpawnedProjectile->Damage = Damage;
+			SpawnedProjectile->HeadShotDamage = HeadShotDamage;
+		
+			if(bUseServerSideRewind && !bServer && !bLocallyControlled)
+			{
+				SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
+				SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
+			}
 		}
 	}
 }

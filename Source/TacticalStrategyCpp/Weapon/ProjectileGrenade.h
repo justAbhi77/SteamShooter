@@ -24,7 +24,4 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* BounceSound;
-	
-public:
-	virtual void Tick(float DeltaTime) override;
 };

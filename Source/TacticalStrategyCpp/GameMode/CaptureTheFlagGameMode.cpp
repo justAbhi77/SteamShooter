@@ -5,7 +5,15 @@
 #include "TacticalStrategyCpp/GameState/BlasterGameState.h"
 #include "TacticalStrategyCpp/Weapon/Flag.h"
 
-void ACaptureTheFlagGameMode::FlagCaptured(const class AFlag* Flag, const class AFlagZone* Zone) const
+void ACaptureTheFlagGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
+{
+	// we do not want to score a team point when player is eliminated
+	// Super::PlayerEliminated(ElimmedCharacter, VictimController, AttackerController);
+	
+	ABlasterGameMode::PlayerEliminated(ElimmedCharacter, VictimController, AttackerController);
+}
+
+void ACaptureTheFlagGameMode::FlagCaptured(const AFlag* Flag, const AFlagZone* Zone) const
 {
 	bool bValidCapture = Flag->GetTeam() != Zone->Team;
 

@@ -7,46 +7,46 @@
 
 AProjectileGrenade::AProjectileGrenade()
 {
-	PrimaryActorTick.bCanEverTick = true;
-	
+	PrimaryActorTick.bCanEverTick = false;
+
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GrenadeMesh"));
 	ProjectileMesh->SetupAttachment(RootComponent);
 	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	
+
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->SetIsReplicated(true);
-	ProjectileMovementComponent->InitialSpeed = 15000;
-	ProjectileMovementComponent->MaxSpeed = 15000;
-	ProjectileMovementComponent->bShouldBounce = true;
+	ProjectileMovementComponent->InitialSpeed = 15000.f;
+	ProjectileMovementComponent->MaxSpeed = 15000.f;
+	ProjectileMovementComponent->bShouldBounce = true; // Enable bouncing
+}
+
+void AProjectileGrenade::BeginPlay()
+{
+	// Skip the parent `AProjectile` BeginPlay logic (use `AActor::BeginPlay` instead)
+	AActor::BeginPlay();
+
+	// Spawn visual trail system
+	SpawnTrailSystem();
+	// Start the destroy timer for auto destruct
+	StartDestroyTimer();
+
+	// Bind the bounce event to OnBounce handler
+	ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &AProjectileGrenade::OnBounce);
 }
 
 void AProjectileGrenade::Destroyed()
 {
 	ExplodeDamage();
-	
+
 	Super::Destroyed();
 }
 
-void AProjectileGrenade::BeginPlay()
-{
-	AActor::BeginPlay(); // skip projectile begin play
-
-	SpawnTrailSystem();
-	StartDestroyTimer();
-
-	ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &AProjectileGrenade::OnBounce);
-}
-
+// Called when the grenade bounces off a surface.Plays a bounce sound at the grenade's location.
 // ReSharper disable once CppMemberFunctionMayBeConst
 void AProjectileGrenade::OnBounce(const FHitResult& ImpactResult, const FVector& ImpactVelocity)
 {
+	// Play the bounce sound at the grenade's current location
 	if(BounceSound)
 		UGameplayStatics::PlaySoundAtLocation(this, BounceSound, GetActorLocation());
 }
-
-void AProjectileGrenade::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-

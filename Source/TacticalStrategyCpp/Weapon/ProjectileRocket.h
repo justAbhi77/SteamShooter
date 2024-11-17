@@ -6,6 +6,9 @@
 #include "Projectile.h"
 #include "ProjectileRocket.generated.h"
 
+/**
+ * Represents a rocket projectile with custom movement, sound, and explosion effects.
+ */
 UCLASS()
 class TACTICALSTRATEGYCPP_API AProjectileRocket : public AProjectile
 {
@@ -20,18 +23,19 @@ protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse, const FHitResult& Hit) override;
 
-	UPROPERTY(EditAnywhere)
+	// Continuous sound effect for the rocket's flight.
+	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundCue* ProjectileLoop;
 
-	UPROPERTY(EditAnywhere)
+	// Controls how the looping sound attenuates with distance.
+	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundAttenuation* LoopingSoundAttenuation;
-	
+
+	// Audio component for managing the rocket's looping sound.
 	UPROPERTY()
 	UAudioComponent* ProjectileLoopComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	// Custom movement component for the rocket's physics and trajectory.
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	class URocketMovementComponent* RocketMovementComponent;
-	
-public:
-	virtual void Tick(float DeltaTime) override;
 };

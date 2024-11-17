@@ -45,6 +45,7 @@ public:
 
 	// Match state and team management
 	void OnMatchStateSet(FName State, bool bisTeamsMatch = false);
+	void DisablePlayerMechanics();
 	void HandleCooldown();
 	void HandleTeamSelection();
 

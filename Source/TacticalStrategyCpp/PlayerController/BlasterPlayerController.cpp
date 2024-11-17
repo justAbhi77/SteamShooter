@@ -409,6 +409,8 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 		SetHudShield(BlasterCharacter->GetShield(), BlasterCharacter->GetMaxShield());
 		SetHudGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());
 		BlasterCharacter->UpdateHudAmmo();
+		if(MatchState == MatchState::MatchInCooldown)
+			DisablePlayerMechanics();
 	}
 }
 
@@ -489,17 +491,20 @@ void ABlasterPlayerController::OnMatchStateSet(const FName State, bool bisTeamsM
 	}
 }
 
-// Disables gameplay controls during cooldown phase and updates HUD announcements
-void ABlasterPlayerController::HandleCooldown()
+void ABlasterPlayerController::DisablePlayerMechanics()
 {
 	if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn()))
 	{
 		BlasterCharacter->bDisableGameplay = true;
 		if(UCombatComponent* CombatComponent = BlasterCharacter->GetCombatComponent())
-		{
 			CombatComponent->FireButtonPressed(false);
-		}
 	}
+}
+
+// Disables gameplay controls during cooldown phase and updates HUD announcements
+void ABlasterPlayerController::HandleCooldown()
+{
+	DisablePlayerMechanics();
 
 	GetBlasterHud();
 	if(BlasterHud == nullptr || BlasterHud->CharacterOverlay == nullptr) return;
