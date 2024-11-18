@@ -123,7 +123,7 @@ void ABlasterPlayerController::BeginPlay()
 	ServerCheckMatchState();
 }
 
-// Sync the HUD countdown timer with the server
+// Sync the HUD countdown timer with the serverg
 void ABlasterPlayerController::SetHudTime()
 {
 	const double MilliSecondsLeft = MatchTime - GetServerTime();
@@ -175,7 +175,13 @@ void ABlasterPlayerController::PollInit()
 
 				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
 				if(BlasterCharacter && BlasterCharacter->GetCombatComponent() && bInitializeGrenades)
-					SetHudGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());
+					SetHudGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());				
+
+				if(bTeamsMatch) InitTeamScores();
+				else HideTeamScores();
+				
+				if(MatchState == MatchState::WaitingToStart)
+					BlasterHud->AddAnnouncement();
 			}
 		}
 	}
@@ -351,7 +357,7 @@ void ABlasterPlayerController::SetHudMatchCountDown(const float CountDownTime)
 	{		
 		if(CountDownTime < 0.f)
 		{
-			BlasterHud->CharacterOverlay->MatchCountDownText->SetText(FText());
+			BlasterHud->CharacterOverlay->MatchCountDownText->SetText(FText::FromString(TEXT("00::00")));
 			return;
 		}
 		const int32 Min = FMath::FloorToInt(CountDownTime / 60);
@@ -373,7 +379,7 @@ void ABlasterPlayerController::SetHudAnnouncementCountDown(const float Countdown
 	{
 		if(CountdownTime < 0.f)
 		{
-			Announcement->WarmUpTime->SetText(FText());
+			Announcement->WarmUpTime->SetText(FText::FromString(TEXT("00::00")));
 			return;
 		}
 		const int32 Min = FMath::FloorToInt(CountdownTime / 60);
