@@ -54,9 +54,6 @@ public:
 
 	void AddElimAnnouncement(const FString& AttackerName, const FString& VictimName);
 
-protected:
-	virtual void BeginPlay() override;
-
 private:
 	UPROPERTY()
 	class APlayerController* OwningPlayer;

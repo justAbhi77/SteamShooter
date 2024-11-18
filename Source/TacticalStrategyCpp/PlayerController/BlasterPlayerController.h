@@ -45,7 +45,7 @@ public:
 
 	// Match state and team management
 	void OnMatchStateSet(FName State, bool bisTeamsMatch = false);
-	void DisablePlayerMechanics();
+	void DisablePlayerMechanics() const;
 	void HandleCooldown();
 	void HandleTeamSelection();
 
@@ -116,7 +116,7 @@ private:
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
 	UPROPERTY()
-	class UCharacterOverlay* CharacterOverlay;
+	class UCharacterOverlay* PcCharacterOverlay;
 
 	// HUD values (for polling data until hud is initialized)
 	float HudHealth, HudMaxHealth, HudScore, HudShield, HudMaxShield, HudCarriedAmmo, HudWeaponAmmo;

@@ -94,11 +94,6 @@ void ABlasterHud::AddElimAnnouncement(const FString& AttackerName, const FString
 	}
 }
 
-void ABlasterHud::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 void ABlasterHud::AddCharacterOverlay()
 {
 	if(APlayerController* OwningPlayerController = GetOwningPlayerController(); OwningPlayerController && CharacterOverlayClass)
@@ -111,7 +106,7 @@ void ABlasterHud::AddCharacterOverlay()
 void ABlasterHud::DrawCrosshair(UTexture2D* Texture, const FVector2D& ViewportCenter, const FVector2D& Spread,
                                 const FLinearColor& CrosshairColor)
 {
-	if(!Texture) return;
+	if(Texture == nullptr) return;
 	
 	const float TextureWidth = Texture->GetSizeX(), TextureHeight = Texture->GetSizeY();
 
