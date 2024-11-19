@@ -3,9 +3,9 @@
 UENUM(BlueprintType)
 enum class EMultiplayerModes : uint8
 {
-	Emm_Teams = 0 UMETA (DisplayName = "Teams"),
-	Emm_CaptureFlag = 1 UMETA (DisplayName = "Capture the Flag"),
-	Emm_FreeForAll = 2 UMETA (DisplayName = "Free For All"),	
+	EMM_Teams UMETA (DisplayName = "Teams"),
+	EMM_CaptureFlag UMETA (DisplayName = "Capture the Flag"),
+	EMM_FreeForAll UMETA (DisplayName = "Free For All"),	
 	
-	Emm_Max = 3 UMETA (DisplayName = "DefaultMAX")
+	EMM_Max UMETA (DisplayName = "DefaultMAX", Hidden)
 };

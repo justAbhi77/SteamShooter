@@ -71,7 +71,7 @@ private:
 	// Variables for managing session re-creation
 	bool bCreateSessionOnDestroy = false;
 	int32 LastNumPublicConnections = 0, DesiredNumPublicConnections = 0;
-	EMultiplayerModes LastMatchType = EMultiplayerModes::Emm_Teams, DesiredMatchType = EMultiplayerModes::Emm_Teams;
+	EMultiplayerModes LastMatchType = EMultiplayerModes::EMM_Teams, DesiredMatchType = EMultiplayerModes::EMM_Teams;
 
 public:
 	FORCEINLINE int GetDesiredNumPublicConnections() const { return DesiredNumPublicConnections; }

@@ -24,7 +24,7 @@ public:
 	 * @param LobbyPath The lobby to host while waiting for players to join.
 	 */
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup(int32 NumberPublicConnections = 4, EMultiplayerModes TypeOfMatch = EMultiplayerModes::Emm_Teams,
+	void MenuSetup(int32 NumberPublicConnections = 4, EMultiplayerModes TypeOfMatch = EMultiplayerModes::EMM_Teams,
 		FString LobbyPath = FString(TEXT("/Game/Maps/Lobby")));
 
 protected:
@@ -65,7 +65,7 @@ private:
 
 	/** Match type settings */
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	EMultiplayerModes MatchType = EMultiplayerModes::Emm_FreeForAll;
+	EMultiplayerModes MatchType = EMultiplayerModes::EMM_FreeForAll;
 
 	/** Path to the multiplayer lobby */
 	FString PathToLobby{TEXT("")};

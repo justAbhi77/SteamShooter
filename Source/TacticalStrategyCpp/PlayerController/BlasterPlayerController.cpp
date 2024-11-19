@@ -123,7 +123,7 @@ void ABlasterPlayerController::BeginPlay()
 	ServerCheckMatchState();
 }
 
-// Sync the HUD countdown timer with the serverg
+// Sync the HUD countdown timer with the server
 void ABlasterPlayerController::SetHudTime()
 {
 	const double MilliSecondsLeft = MatchTime - GetServerTime();
@@ -143,7 +143,10 @@ void ABlasterPlayerController::SetHudTime()
 			Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)): BlasterGameMode;
 
 		if(BlasterGameMode)
+		{
+			LevelStartingTime = BlasterGameMode->LevelStartingTime;
 			SecondsLeft = FMath::CeilToInt(BlasterGameMode->GetCountdownTime() + LevelStartingTime);
+		}
 	}
 	if(CountDownInt != SecondsLeft)
 	{

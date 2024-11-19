@@ -80,7 +80,7 @@ void ALobbyGameMode::StartMatch()
 		bUseSeamlessTravel = true;
 
 		// Default the map to the FreeForAll map if no match type is selected.
-		EMultiplayerModes MatchType = EMultiplayerModes::Emm_Teams;
+		EMultiplayerModes MatchType = EMultiplayerModes::EMM_Teams;
 		FString MainGameMapPath = "";
 
 		// Retrieve the match type from the MultiplayerSubsystem if available.
@@ -90,16 +90,16 @@ void ALobbyGameMode::StartMatch()
 		// Determine which map to load based on the match type.
 		switch (MatchType)
 		{
-		case EMultiplayerModes::Emm_Teams:
+		case EMultiplayerModes::EMM_Teams:
 			MainGameMapPath = TeamsMapPath;
 			break;
-		case EMultiplayerModes::Emm_CaptureFlag:
+		case EMultiplayerModes::EMM_CaptureFlag:
 			MainGameMapPath = CaptureFlagMapPath;
 			break;
-		case EMultiplayerModes::Emm_FreeForAll:
+		case EMultiplayerModes::EMM_FreeForAll:
 			MainGameMapPath = FreeForAllMapPath;
 			break;
-		case EMultiplayerModes::Emm_Max:
+		case EMultiplayerModes::EMM_Max:
 		default:
 			// Default to FreeForAll if the match type is invalid.
 			MainGameMapPath = FreeForAllMapPath;

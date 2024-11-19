@@ -61,6 +61,9 @@ bool UWMenu::Initialize()
 	if(HostButton) HostButton->OnClicked.AddDynamic(this, &UWMenu::HostButtonClicked);
 	if(JoinButton) JoinButton->OnClicked.AddDynamic(this, &UWMenu::JoinButtonClicked);
 	
+	// UEnum* EnumClass = StaticEnum<EMultiplayerModes>();
+	// FString string1 = EnumClass->GetDisplayNameTextByIndex(0).ToString();
+	// UE_LOG(LogTemp, Warning, TEXT("enum is converted to %s, %s, %s"), *string1, *string2, *string3);
 	return true;
 }
 
