@@ -60,8 +60,9 @@ void UMultiplayerSessionSubsystem::CreateSession(const int32 NumPublicConnection
 	}
 }
 
-void UMultiplayerSessionSubsystem::FindSessions(int32 MaxSearchResults)
+void UMultiplayerSessionSubsystem::FindSessions(int32 MaxSearchResults, EMultiplayerModes MatchType)
 {
+	DesiredMatchType = MatchType;
 	if(!SessionInterface.IsValid()) return;
 
 	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);

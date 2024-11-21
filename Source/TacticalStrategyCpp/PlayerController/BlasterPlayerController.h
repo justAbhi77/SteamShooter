@@ -117,6 +117,10 @@ private:
 	class ABlasterGameMode* BlasterGameMode;
 	UPROPERTY()
 	class UCharacterOverlay* PcCharacterOverlay;
+	
+	FTimerHandle BlasterHudCacheTimer;
+	UFUNCTION()
+	void CacheBlasterHud();
 
 	// HUD values (for polling data until hud is initialized)
 	float HudHealth, HudMaxHealth, HudScore, HudShield, HudMaxShield, HudCarriedAmmo, HudWeaponAmmo;

@@ -50,6 +50,16 @@ void ABlasterPlayerController::GetBlasterHud()
 {
 	if(BlasterHud == nullptr)
 		BlasterHud = Cast<ABlasterHud>(GetHUD());
+	if((BlasterHud == nullptr) && !BlasterHudCacheTimer.IsValid())
+		GetWorldTimerManager().SetTimer(BlasterHudCacheTimer, this, &ABlasterPlayerController::CacheBlasterHud, 0.2f, true);
+}
+
+void ABlasterPlayerController::CacheBlasterHud()
+{
+	if(BlasterHud == nullptr)
+		BlasterHud = Cast<ABlasterHud>(GetHUD());
+	if (BlasterHud != nullptr)
+		BlasterHudCacheTimer.Invalidate();
 }
 
 // Helper to show/hide team scores and set initial values
@@ -163,29 +173,34 @@ void ABlasterPlayerController::PollInit()
 {
 	if(PcCharacterOverlay == nullptr)
 	{
-		if(BlasterHud && BlasterHud->CharacterOverlay)
+		if(BlasterHud)
 		{
-			PcCharacterOverlay = BlasterHud->CharacterOverlay;
-			if(PcCharacterOverlay)
+			if(BlasterHud->CharacterOverlay)
 			{
-				// Set initial HUD values if they are flagged to initialize
-				if(bInitializeHealth) SetHudHealth(HudHealth, HudMaxHealth);
-				if(bInitializeShields) SetHudShield(HudShield, HudMaxShield);
-				if(bInitializeScore) SetHudScore(HudScore);
-				if(bInitializeDefeats) SetHudDefeats(HudDefeats);
-				if(bInitializeCarriedAmmo) SetHudCarriedAmmo(HudCarriedAmmo);
-				if(bInitializeWeaponAmmo) SetHudWeaponAmmo(HudWeaponAmmo);
+				PcCharacterOverlay = BlasterHud->CharacterOverlay;
+				if(PcCharacterOverlay)
+				{
+					// Set initial HUD values if they are flagged to initialize
+					if(bInitializeHealth) SetHudHealth(HudHealth, HudMaxHealth);
+					if(bInitializeShields) SetHudShield(HudShield, HudMaxShield);
+					if(bInitializeScore) SetHudScore(HudScore);
+					if(bInitializeDefeats) SetHudDefeats(HudDefeats);
+					if(bInitializeCarriedAmmo) SetHudCarriedAmmo(HudCarriedAmmo);
+					if(bInitializeWeaponAmmo) SetHudWeaponAmmo(HudWeaponAmmo);
 
-				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
-				if(BlasterCharacter && BlasterCharacter->GetCombatComponent() && bInitializeGrenades)
-					SetHudGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());				
+					ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+					if(BlasterCharacter && BlasterCharacter->GetCombatComponent() && bInitializeGrenades)
+						SetHudGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());				
 
-				if(bTeamsMatch) InitTeamScores();
-				else HideTeamScores();
-				
-				if(MatchState == MatchState::WaitingToStart)
-					BlasterHud->AddAnnouncement();
+					if(bTeamsMatch) InitTeamScores();
+					else HideTeamScores();
+				}
 			}
+			
+			if(MatchState == MatchState::WaitingToStart)
+				BlasterHud->AddAnnouncement();
+			if(MatchState == MatchState::InProgress)
+				BlasterHud->AddCharacterOverlay();
 		}
 	}
 }
@@ -344,11 +359,6 @@ void ABlasterPlayerController::ServerCheckMatchState_Implementation()
 		MatchState = GameMode->GetMatchState();
 		CooldownTime = GameMode->CooldownTime;
 		ClientJoinMidGame(MatchState, WarmUpTime, MatchTime, LevelStartingTime, CooldownTime);
-
-		/*
-		if(BlasterHud && MatchState == MatchState::WaitingToStart && IsLocalController())
-			BlasterHud->AddAnnouncement();
-			*/
 	}
 }
 

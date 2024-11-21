@@ -158,7 +158,7 @@ void UWMenu::JoinButtonClicked()
 	// Disable join button and initiate session search
 	JoinButton->SetIsEnabled(false);
 	if(MultiplayerSessionSubsystem)
-		MultiplayerSessionSubsystem->FindSessions(1000);
+		MultiplayerSessionSubsystem->FindSessions(1000, MatchType);
 }
 
 void UWMenu::MenuTearDown()

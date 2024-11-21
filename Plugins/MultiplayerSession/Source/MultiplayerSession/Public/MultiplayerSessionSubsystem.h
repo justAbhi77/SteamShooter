@@ -28,7 +28,7 @@ public:
 
 	// Public session management functions
 	void CreateSession(int32 NumPublicConnections, EMultiplayerModes MatchType);
-	void FindSessions(int32 MaxSearchResults);
+	void FindSessions(int32 MaxSearchResults, EMultiplayerModes MatchType);
 	void JoinSession(const FOnlineSessionSearchResult& SessionResult);
 	void DestroySession();
 	void StartSession();
