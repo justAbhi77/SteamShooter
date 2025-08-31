@@ -1,0 +1,2 @@
+# Next Steps
+Implement EOS following tutorial by [SebBergy](https://dev.epicgames.com/community/profile/AAEq/SebBergy2.0) : [Tutorial Link](https://dev.epicgames.com/community/learning/courses/1px/unreal-engine-the-eos-online-subsystem-oss-plugin/Lnjn/unreal-engine-introduction)

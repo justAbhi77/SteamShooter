@@ -1,8 +1,11 @@
 # Visual Studio 2015 user specific files
 .vs/
+.vscode/
 .idea/
 .vsconfig
 *.DotSettings.user
+.ignore
+*.code-workspace
 
 # Compiled Object files
 *.slo
@@ -75,3 +78,5 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+/TacticalStrategyEngAss.uproject
