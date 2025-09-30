@@ -1,0 +1,3 @@
+# White-list everything under Content and Source
+!Content/*
+!/Source/**
